@@ -1,0 +1,52 @@
+{
+  "name": "district1921",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "postbuild": "next-sitemap",
+    "db:migrate": "supabase db push",
+    "email:dev": "email dev --dir src/emails --port 3001"
+  },
+  "dependencies": {
+    "@googlemaps/js-api-loader": "^2.1.0",
+    "@hookform/resolvers": "^5.4.0",
+    "@react-email/components": "^1.0.12",
+    "@stripe/stripe-js": "^9.7.0",
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.107.0",
+    "@tanstack/react-query": "^5.101.0",
+    "@vercel/og": "^0.11.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.4.0",
+    "lucide-react": "^1.17.0",
+    "next": "14.2.35",
+    "next-pwa": "^5.6.0",
+    "next-sitemap": "^4.2.3",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-email": "^6.5.0",
+    "react-hook-form": "^7.77.0",
+    "resend": "^6.12.4",
+    "stripe": "^22.2.0",
+    "tailwind-merge": "^3.6.0",
+    "zod": "^4.4.3",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@types/googlemaps": "^3.43.3",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.35",
+    "postcss": "^8",
+    "prettier": "^3.8.3",
+    "prettier-plugin-tailwindcss": "^0.8.0",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  }
+}

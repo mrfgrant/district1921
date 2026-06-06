@@ -1,0 +1,20 @@
+{
+  "name": "District 1921",
+  "short_name": "District 1921",
+  "description": "Community business directory",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0A0F",
+  "theme_color": "#C9A84C",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["business", "shopping"],
+  "shortcuts": [
+    { "name": "Search", "url": "/search", "description": "Search businesses" },
+    { "name": "Near Me", "url": "/near-me", "description": "Find businesses nearby" },
+    { "name": "Deals", "url": "/deals", "description": "Browse deals" }
+  ]
+}
