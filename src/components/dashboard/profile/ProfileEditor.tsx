@@ -17,8 +17,10 @@ export function ProfileEditor({ business: initial }: { business: any }) {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [uploadingCover, setUploadingCover] = useState(false)
   const [uploadingPhotos, setUploadingPhotos] = useState(false)
   const logoInputRef = useRef<HTMLInputElement>(null)
+  const coverInputRef = useRef<HTMLInputElement>(null)
   const photosInputRef = useRef<HTMLInputElement>(null)
 
   const [form, setForm] = useState({
@@ -80,6 +82,16 @@ export function ProfileEditor({ business: initial }: { business: any }) {
     const url = await uploadImage(file, 'business-logos', `${initial.id}/logo-${Date.now()}.${file.name.split('.').pop()}`)
     if (url) set('logo_url', url)
     setUploadingLogo(false)
+  }
+
+
+  async function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingCover(true)
+    const url = await uploadImage(file, 'business-photos', `${initial.id}/cover-${Date.now()}.${file.name.split('.').pop()}`)
+    if (url) set('cover_photo_url', url)
+    setUploadingCover(false)
   }
 
   async function handlePhotosUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -323,6 +335,28 @@ export function ProfileEditor({ business: initial }: { business: any }) {
       {/* ── PHOTOS ── */}
       {tab === 'Photos' && (
         <div>
+          {/* Cover Photo */}
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Cover Photo <span style={{color:'#b0a898',fontWeight:400}}>(banner behind logo on your business page)</span></label>
+            <div style={{width:'100%',height:90,borderRadius:10,overflow:'hidden',background:form.cover_photo_url?`url(${form.cover_photo_url}) center/cover`:'linear-gradient(135deg,#1a3a2a,#2d6a4f)',marginBottom:8,display:'flex',alignItems:'center',justifyContent:'center',border:'2px solid #2A2A35'}}>
+              {!form.cover_photo_url && <span style={{color:'rgba(255,255,255,0.4)',fontSize:12}}>No cover photo</span>}
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              <button type="button" onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}
+                style={{padding:'8px 16px',background:'#2A2A35',color:'#F0EDE8',border:'none',borderRadius:6,fontSize:12,fontWeight:600,cursor:'pointer',marginBottom:4}}>
+                {uploadingCover ? 'Uploading…' : form.cover_photo_url ? '🖼 Change Cover' : '🖼 Upload Cover'}
+              </button>
+              {form.cover_photo_url && (
+                <button type="button" onClick={() => set('cover_photo_url', '')}
+                  style={{padding:'8px 14px',background:'transparent',border:'1px solid #3A3A45',borderRadius:6,fontSize:12,color:'#ef9a9a',cursor:'pointer'}}>
+                  Remove
+                </button>
+              )}
+            </div>
+            <input ref={coverInputRef} type="file" accept="image/jpeg,image/png,image/webp" style={{display:'none'}} onChange={handleCoverUpload} />
+            <span style={{fontSize:11,color:'#6B6B80'}}>JPG, PNG, or WebP · Max 10MB · Recommended: 1280×400px</span>
+          </div>
+
           {/* Logo */}
           <div style={fieldStyle}>
             <label style={labelStyle}>Logo</label>
