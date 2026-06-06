@@ -193,42 +193,52 @@ export function SearchPage() {
     }
   }, [router])
 
-  // Geolocate user on first load if no search params
+  // On first load: detect location, load all businesses in state for map
   useEffect(() => {
     if (searchParams.toString()) {
       doSearch({ q, city, state, category, shield, openNow, mobile, nationwide })
       return
     }
-    if (!navigator.geolocation) return
-    setLocating(true)
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const { latitude: lat, longitude: lng } = pos.coords
-        // Reverse geocode to get city/state
+
+    // Load default state view (Georgia fallback if no geolocation)
+    async function loadDefaultView() {
+      setLocating(true)
+      let detectedLat = 32.9, detectedLng = -83.4 // Georgia center fallback
+      let detectedCity = '', detectedState = 'GA'
+
+      if (navigator.geolocation) {
         try {
+          const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 6000 })
+          )
+          detectedLat = pos.coords.latitude
+          detectedLng = pos.coords.longitude
+
+          // Reverse geocode
           const res = await fetch(
-            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&result_type=locality&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
+            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${detectedLat},${detectedLng}&result_type=locality&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
           )
           const data = await res.json()
-          let detectedCity = '', detectedState = ''
           if (data.results?.[0]) {
             for (const c of data.results[0].address_components) {
               if (c.types.includes('locality')) detectedCity = c.long_name
               if (c.types.includes('administrative_area_level_1')) detectedState = c.short_name
             }
           }
-          setUserLocation({ lat, lng, city: detectedCity, state: detectedState })
-          if (detectedCity) {
-            setCity(detectedCity)
-            setState(detectedState)
-            doSearch({ q, city: detectedCity, state: detectedState, category, shield, openNow, mobile })
-          }
-        } catch {}
-        setLocating(false)
-      },
-      () => setLocating(false),
-      { timeout: 6000 }
-    )
+        } catch {
+          // Geolocation denied or failed — use fallback
+        }
+      }
+
+      setUserLocation({ lat: detectedLat, lng: detectedLng, city: detectedCity, state: detectedState })
+      setLocating(false)
+
+      // Load ALL businesses in the detected state for the default map view
+      // Don't filter by city — show the whole state
+      doSearch({ q: '', city: '', state: detectedState, category, shield, openNow, mobile, nationwide })
+    }
+
+    loadDefaultView()
   }, []) // eslint-disable-line
 
   // Run search on mount if params exist

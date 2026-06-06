@@ -32,9 +32,22 @@ export function BusinessMap({ businesses, center }: {
   useEffect(() => {
     if (!mapsReady || !mapRef.current) return
     const google = (window as any).google
+    // State-level centers for common states
+    const STATE_CENTERS: Record<string, {lat: number; lng: number}> = {
+      GA:{lat:32.9,lng:-83.4},AL:{lat:32.8,lng:-86.8},FL:{lat:27.8,lng:-81.6},
+      SC:{lat:33.8,lng:-80.9},NC:{lat:35.5,lng:-79.4},TN:{lat:35.9,lng:-86.4},
+      TX:{lat:31.0,lng:-99.9},CA:{lat:36.7,lng:-119.4},NY:{lat:42.9,lng:-75.5},
+      IL:{lat:40.6,lng:-89.2},OH:{lat:40.4,lng:-82.8},VA:{lat:37.4,lng:-79.0},
+    }
+    const hasCity = !!center?.city
+    const defaultCenter = center
+      ? { lat: center.lat, lng: center.lng }
+      : { lat: 32.9, lng: -83.4 } // GA default
+    const defaultZoom = hasCity ? 11 : (center?.state && STATE_CENTERS[center.state] ? 7 : 6)
+
     mapInstanceRef.current = new google.maps.Map(mapRef.current, {
-      center: center ?? { lat: 37.09, lng: -95.71 },
-      zoom: center ? 12 : 4,
+      center: defaultCenter,
+      zoom: defaultZoom,
       mapTypeControl: false, fullscreenControl: false, streetViewControl: false,
       styles: [
         { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
@@ -110,8 +123,16 @@ export function BusinessMap({ businesses, center }: {
     if (plotted.length === 1) {
       mapInstanceRef.current.setCenter({ lat: plotted[0].lat!, lng: plotted[0].lng! })
       mapInstanceRef.current.setZoom(14)
-    } else {
-      mapInstanceRef.current.fitBounds(bounds, { top: 40, right: 40, bottom: 40, left: 40 })
+    } else if (plotted.length > 1) {
+      mapInstanceRef.current.fitBounds(bounds, { top: 60, right: 60, bottom: 60, left: 60 })
+      // Don't zoom in past state level for large result sets
+      const listener = window.google.maps.event.addListenerOnce(
+        mapInstanceRef.current, 'bounds_changed', () => {
+          const zoom = mapInstanceRef.current.getZoom()
+          const hasCity = !!(center as any)?.city
+          if (!hasCity && zoom > 8) mapInstanceRef.current.setZoom(7)
+        }
+      )
     }
   }, [businesses, mapsReady])
 
