@@ -1,23 +1,15 @@
-import { SearchResults } from '@/components/search/SearchResults'
-import { SearchFilters } from '@/components/search/SearchFilters'
-import { BusinessMap } from '@/components/map/BusinessMap'
+import { Suspense } from 'react'
+import { SearchPage } from '@/components/search/SearchPage'
 
-export const metadata = { title: 'Search Businesses' }
+export const metadata = {
+  title: 'Search Businesses — District 1921',
+  description: 'Search and discover community businesses across all 50 states.',
+}
 
-export default function SearchPage({
-  searchParams,
-}: {
-  searchParams: { q?: string; city?: string; state?: string; category?: string }
-}) {
+export default function Search() {
   return (
-    <div className="flex flex-col lg:flex-row gap-0 h-[calc(100vh-64px)]">
-      <div className="w-full lg:w-[420px] flex flex-col border-r border-[var(--color-border)]">
-        <SearchFilters params={searchParams} />
-        <SearchResults params={searchParams} />
-      </div>
-      <div className="flex-1">
-        <BusinessMap params={searchParams} />
-      </div>
-    </div>
+    <Suspense>
+      <SearchPage />
+    </Suspense>
   )
 }
