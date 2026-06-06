@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createSubscriptionCheckout, createGoldShieldCheckout } from '@/lib/stripe'
+
+export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
+  // Lazy-import Stripe to avoid build-time initialization without env vars
+  const { createSubscriptionCheckout, createGoldShieldCheckout } = await import('@/lib/stripe')
+
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -16,7 +20,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing businessId or type' }, { status: 400 })
   }
 
-  // Verify the business belongs to this user
   const { data: business } = await supabase
     .from('businesses')
     .select('id, name, owner_id, subscription_status')
