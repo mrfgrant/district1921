@@ -27,6 +27,9 @@ export type BusinessCategory =
   | 'faith-community'
   | 'real-estate'
   | 'entertainment-travel'
+  | 'internet-services'
+  | 'programming-services'
+  | 'information-technology'
 
 export const CATEGORY_LABELS: Record<BusinessCategory, string> = {
   'food-dining': 'Food & Dining',
@@ -41,6 +44,9 @@ export const CATEGORY_LABELS: Record<BusinessCategory, string> = {
   'faith-community': 'Faith & Community',
   'real-estate': 'Real Estate',
   'entertainment-travel': 'Entertainment & Travel',
+  'internet-services': 'Internet Services',
+  'programming-services': 'Programming Services',
+  'information-technology': 'Information Technology',
 }
 
 export type BusinessStatus = 'pending' | 'active' | 'suspended' | 'rejected'
