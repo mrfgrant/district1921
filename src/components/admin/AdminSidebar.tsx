@@ -10,6 +10,7 @@ const navItems = [
   { href: '/admin/shield-queue', label: 'Shield Queue', roles: ['admin'] },
   { href: '/admin/reports', label: 'Reports', roles: ['admin', 'moderator'] },
   { href: '/admin/spotlight', label: 'Spotlight', roles: ['admin'] },
+    { href: '/admin/sponsors', label: 'Sponsors', roles: ['admin'] },
   { href: '/admin/ads', label: 'Ad Approvals', roles: ['admin'] },
   { href: '/admin/categories', label: 'Categories', roles: ['admin'] },
   { href: '/admin/users', label: 'Users', roles: ['admin'] },
