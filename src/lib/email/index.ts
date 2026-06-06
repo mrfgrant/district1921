@@ -282,3 +282,112 @@ export async function sendSubscriptionCancelled(to: string, businessName: string
     `),
   })
 }
+
+export async function sendMonthlySummary({
+  to, businessName, period, stats, dashboardUrl,
+}: {
+  to: string; businessName: string; period: string
+  stats: { views: number; checkins: number; follows: number; shares: number; clicks: number }
+  dashboardUrl: string
+}) {
+  const { Resend } = await import('resend')
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  await resend.emails.send({
+    from: 'District 1921 <hello@mail.district1921.com>',
+    to,
+    subject: `📊 Your ${period} Summary — ${businessName}`,
+    html: `
+      <div style="font-family:'DM Sans',sans-serif;max-width:560px;margin:0 auto;background:#faf7f0;padding:32px">
+        <div style="background:#1a3a2a;padding:24px 32px;border-radius:12px 12px 0 0;text-align:center">
+          <h1 style="font-family:'Playfair Display',serif;color:#c9a84c;margin:0;font-size:22px">District 1921</h1>
+          <p style="color:rgba(255,255,255,0.65);font-size:13px;margin:4px 0 0">Monthly Business Summary</p>
+        </div>
+        <div style="background:#fff;padding:28px 32px;border:1px solid #e5e0d5;border-top:none">
+          <h2 style="font-family:'Playfair Display',serif;color:#1a3a2a;font-size:20px;margin:0 0 4px">${businessName}</h2>
+          <p style="color:#6b7280;font-size:13px;margin:0 0 24px">${period}</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px">
+            ${[
+              { label: 'Profile Views', val: stats.views, icon: '👁' },
+              { label: 'Check-ins', val: stats.checkins, icon: '📍' },
+              { label: 'New Followers', val: stats.follows, icon: '♡' },
+              { label: 'Shares', val: stats.shares, icon: '↗' },
+              { label: 'Link Clicks', val: stats.clicks, icon: '🔗' },
+            ].map(s => `
+              <div style="background:#faf7f0;border:1px solid #e5e0d5;border-radius:8px;padding:14px;text-align:center">
+                <div style="font-size:20px;margin-bottom:4px">${s.icon}</div>
+                <div style="font-size:22px;font-weight:700;color:#1a3a2a">${s.val}</div>
+                <div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em">${s.label}</div>
+              </div>
+            `).join('')}
+          </div>
+          <a href="${dashboardUrl}" style="display:block;background:#1a3a2a;color:#fff;text-align:center;padding:14px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px">
+            View Full Analytics Dashboard →
+          </a>
+        </div>
+        <p style="color:#b0a898;font-size:11px;text-align:center;margin-top:16px">District 1921 · Community Business Directory</p>
+      </div>
+    `,
+  })
+}
+
+export async function sendSpotlightBlast({
+  to, businessName, businessSlug, blurb, logoUrl,
+}: {
+  to: string; businessName: string; businessSlug: string; blurb: string; logoUrl?: string
+}) {
+  const { Resend } = await import('resend')
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  await resend.emails.send({
+    from: 'District 1921 <hello@mail.district1921.com>',
+    to,
+    subject: `⭐ This Week's Community Spotlight — ${businessName}`,
+    html: `
+      <div style="font-family:'DM Sans',sans-serif;max-width:560px;margin:0 auto;background:#faf7f0;padding:32px">
+        <div style="background:linear-gradient(135deg,#1a3a2a,#2d6a4f);padding:32px;border-radius:12px 12px 0 0;text-align:center">
+          <p style="color:rgba(255,255,255,0.6);font-size:11px;letter-spacing:0.2em;text-transform:uppercase;margin:0 0 8px">District 1921 · Weekly Spotlight</p>
+          <h1 style="font-family:'Playfair Display',serif;color:#c9a84c;margin:0;font-size:28px;font-weight:900">Community Spotlight</h1>
+        </div>
+        <div style="background:#fff;padding:32px;border:1px solid #e5e0d5;border-top:none;text-align:center">
+          ${logoUrl ? `<img src="${logoUrl}" style="width:80px;height:80px;border-radius:12px;object-fit:cover;margin:0 auto 16px;display:block;border:3px solid #c9a84c" />` : ''}
+          <h2 style="font-family:'Playfair Display',serif;color:#1a3a2a;font-size:24px;margin:0 0 12px">${businessName}</h2>
+          <p style="color:#4a4540;font-size:15px;line-height:1.7;margin:0 0 24px">${blurb}</p>
+          <a href="https://district1921.com/business/${businessSlug}" style="display:inline-block;background:#c9a84c;color:#1a3a2a;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px">
+            View This Business →
+          </a>
+        </div>
+        <p style="color:#b0a898;font-size:11px;text-align:center;margin-top:16px">District 1921 · Community Business Directory · <a href="https://district1921.com" style="color:#b0a898">district1921.com</a></p>
+      </div>
+    `,
+  })
+}
+
+export async function sendReferralCredit({
+  to, creditAmount, referralName,
+}: {
+  to: string; creditAmount: number; referralName: string
+}) {
+  const { Resend } = await import('resend')
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  await resend.emails.send({
+    from: 'District 1921 <hello@mail.district1921.com>',
+    to,
+    subject: `🎉 You earned a referral credit — $${(creditAmount / 100).toFixed(0)} off your next renewal`,
+    html: `
+      <div style="font-family:'DM Sans',sans-serif;max-width:560px;margin:0 auto;background:#faf7f0;padding:32px">
+        <div style="background:#1a3a2a;padding:24px 32px;border-radius:12px 12px 0 0;text-align:center">
+          <h1 style="font-family:'Playfair Display',serif;color:#c9a84c;margin:0;font-size:22px">District 1921</h1>
+        </div>
+        <div style="background:#fff;padding:32px;border:1px solid #e5e0d5;border-top:none;text-align:center">
+          <div style="font-size:48px;margin-bottom:16px">🎉</div>
+          <h2 style="font-family:'Playfair Display',serif;color:#1a3a2a;font-size:22px;margin:0 0 8px">You earned a referral credit!</h2>
+          <p style="color:#6b7280;font-size:14px;margin:0 0 20px">${referralName} just joined District 1921 using your referral link.</p>
+          <div style="background:#faf7f0;border:2px solid #c9a84c;border-radius:12px;padding:20px;margin-bottom:24px;display:inline-block">
+            <div style="font-size:36px;font-weight:900;color:#1a3a2a">$${(creditAmount / 100).toFixed(0)}</div>
+            <div style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.1em">Credit Applied</div>
+          </div>
+          <p style="color:#6b7280;font-size:13px">Your credit will be applied automatically at your next billing renewal.</p>
+        </div>
+      </div>
+    `,
+  })
+}
