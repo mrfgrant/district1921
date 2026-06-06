@@ -1,10 +1,10 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { SuggestionsQueue } from '@/components/admin/SuggestionsQueue'
 
 export const metadata = { title: 'Suggestions — Admin' }
 
 export default async function SuggestionsPage() {
-  const supabase = createClient()
+  const supabase = createAdminClient()
   const { data: suggestions } = await supabase
     .from('preregistrations')
     .select('*')
