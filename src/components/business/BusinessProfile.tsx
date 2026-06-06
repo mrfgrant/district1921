@@ -191,6 +191,21 @@ export function BusinessProfile({ business: biz, deals, events, isPaid }: {
               {copied ? '✓ Copied!' : '↗ Share'}
             </button>
 
+            {/* Share Card — opens branded OG image in new tab */}
+            <a
+              href={`/api/og?name=${encodeURIComponent(biz.name)}&city=${encodeURIComponent(biz.city ?? '')}&state=${encodeURIComponent(biz.state ?? '')}&category=${encodeURIComponent(biz.category)}&gold=${biz.gold_shield ? '1' : '0'}${biz.logo_url ? `&logo=${encodeURIComponent(biz.logo_url)}` : ''}${biz.rating_avg ? `&rating=${biz.rating_avg}` : ''}`}
+              target="_blank" rel="noopener noreferrer"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '10px 18px', borderRadius: 8,
+                border: '1.5px solid rgba(201,168,76,0.6)',
+                background: 'rgba(201,168,76,0.06)',
+                fontSize: 13, fontWeight: 600, color: '#c9a84c',
+                textDecoration: 'none', cursor: 'pointer',
+              }}>
+              🖼 Share Card
+            </a>
+
             {/* Stats */}
             <div style={{ marginLeft: 'auto', display: 'flex', gap: 20, fontSize: 13, color: '#6b7280' }}>
               {biz.rating_avg && biz.rating_count > 0 && (
