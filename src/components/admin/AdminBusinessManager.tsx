@@ -22,7 +22,7 @@ const DEFAULT_FORM = {
   address:'', suite:'', city:'', state:'', zip:'',
   service_area:'local', is_mobile_service:false,
   subscription_status:'active', gold_shield:false, honor_pledge:true,
-  logo_url:'', photos:[] as string[],
+  logo_url:'', cover_photo_url:'', photos:[] as string[],
   hours:{...EMPTY_HOURS}, includeHours:false,
 }
 
@@ -33,11 +33,13 @@ export function AdminBusinessManager({ businesses: init }: { businesses: any[] }
   const [submitting, setSubmitting] = useState(false)
   const [cleaning, setCleaning] = useState(false)
   const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [uploadingCover, setUploadingCover] = useState(false)
   const [uploadingPhotos, setUploadingPhotos] = useState(false)
   const [toggling, setToggling] = useState<string|null>(null)
   const [toast, setToast] = useState<{msg:string;ok:boolean}|null>(null)
   const [search, setSearch] = useState('')
   const logoRef = useRef<HTMLInputElement>(null)
+  const coverRef = useRef<HTMLInputElement>(null)
   const photosRef = useRef<HTMLInputElement>(null)
 
   const [form, setForm] = useState({...DEFAULT_FORM})
@@ -66,6 +68,7 @@ export function AdminBusinessManager({ businesses: init }: { businesses: any[] }
       gold_shield: biz.gold_shield||false,
       honor_pledge: biz.honor_pledge||true,
       logo_url: biz.logo_url||'',
+      cover_photo_url: biz.cover_photo_url||'',
       photos: biz.photos||[],
       hours: biz.hours||{...EMPTY_HOURS},
       includeHours: !!biz.hours,
@@ -89,6 +92,16 @@ export function AdminBusinessManager({ businesses: init }: { businesses: any[] }
     const url = await uploadImage(file, 'business-logos', bizId)
     if (url) sf('logo_url', url)
     setUploadingLogo(false)
+  }
+
+
+  async function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]; if (!file) return
+    setUploadingCover(true)
+    const bizId = editingBiz?.id || 'admin-upload'
+    const url = await uploadImage(file, 'business-photos', bizId)
+    if (url) sf('cover_photo_url', url)
+    setUploadingCover(false)
   }
 
   async function handlePhotosUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -122,6 +135,7 @@ export function AdminBusinessManager({ businesses: init }: { businesses: any[] }
       ...form,
       hours: form.includeHours ? form.hours : null,
       logo_url: form.logo_url || null,
+      cover_photo_url: form.cover_photo_url || null,
       photos: form.photos,
     }
 
@@ -331,6 +345,27 @@ export function AdminBusinessManager({ businesses: init }: { businesses: any[] }
                     )}
                   </div>
                 </div>
+              </div>
+
+              {/* Cover Photo Upload */}
+              <div style={{marginBottom:20}}>
+                <label style={LB}>Cover Photo <span style={{color:'#6B6B80',textTransform:'none',letterSpacing:0,fontWeight:400}}>(banner behind logo)</span></label>
+                <div style={{position:'relative',width:'100%',height:100,borderRadius:10,overflow:'hidden',background:form.cover_photo_url?`url(${form.cover_photo_url}) center/cover`:'linear-gradient(135deg,#1a3a2a,#2d6a4f)',marginBottom:8,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                  {!form.cover_photo_url && <span style={{color:'rgba(255,255,255,0.4)',fontSize:12}}>No cover photo</span>}
+                </div>
+                <div style={{display:'flex',gap:8}}>
+                  <button type="button" onClick={()=>coverRef.current?.click()} disabled={uploadingCover}
+                    style={{padding:'7px 14px',background:'#2A2A35',border:'1.5px solid #3A3A45',borderRadius:6,fontSize:12,fontWeight:600,color:'#F0EDE8',cursor:'pointer',fontFamily:"'DM Sans',sans-serif"}}>
+                    {uploadingCover ? 'Uploading...' : form.cover_photo_url ? '🖼 Change Cover' : '🖼 Upload Cover'}
+                  </button>
+                  {form.cover_photo_url && (
+                    <button type="button" onClick={()=>sf('cover_photo_url','')}
+                      style={{padding:'7px 14px',background:'transparent',border:'1.5px solid #3A3A45',borderRadius:6,fontSize:12,fontWeight:600,color:'#ef9a9a',cursor:'pointer',fontFamily:"'DM Sans',sans-serif"}}>
+                      Remove
+                    </button>
+                  )}
+                </div>
+                <input ref={coverRef} type="file" accept="image/jpeg,image/png,image/webp" style={{display:'none'}} onChange={handleCoverUpload} />
               </div>
 
               {/* Photos Upload */}
