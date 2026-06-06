@@ -82,12 +82,16 @@ export function BusinessProfile({ business: biz, deals, events, isPaid }: {
       <div className="bp">
         {/* Cover */}
         <div style={{
-          height: 220,
+          height: 260,
           background: biz.cover_photo_url
             ? `url(${biz.cover_photo_url}) center/cover`
-            : 'linear-gradient(135deg, #1a3a2a 0%, #2d6a4f 60%, #40916c 100%)',
+            : `url('/hero-district.png') center/cover`,
           position: 'relative',
         }}>
+          {/* Dark overlay for text legibility */}
+          {!biz.cover_photo_url && (
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(10,30,20,0.55) 100%)' }} />
+          )}
           {/* Back button */}
           <Link href="/search" style={{
             position: 'absolute', top: 16, left: 20,

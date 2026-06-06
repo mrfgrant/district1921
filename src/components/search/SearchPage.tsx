@@ -19,6 +19,9 @@ const CATEGORY_ICONS: Record<string, string> = {
   'faith-community': '⛪',
   'real-estate': '🏠',
   'entertainment-travel': '🎭',
+    'internet-services': '🌐',
+  'programming-services': '💻',
+  'information-technology': '🖥',
 }
 
 interface Business {
