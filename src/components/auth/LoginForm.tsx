@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 export function LoginForm() {
@@ -13,18 +14,21 @@ export function LoginForm() {
     setLoading(true)
     setError(null)
 
-    const res = await fetch('/api/auth/magic-link', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
+    const supabase = createClient()
+
+    // Use the current window origin so preview URLs work correctly
+    const redirectTo = `${window.location.origin}/auth/callback`
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: redirectTo },
     })
 
-    if (res.ok) {
-      router.push('/verify')
-    } else {
-      const data = await res.json()
-      setError(data.error ?? 'Something went wrong. Try again.')
+    if (error) {
+      setError(error.message)
       setLoading(false)
+    } else {
+      router.push('/verify')
     }
   }
 
@@ -36,25 +40,17 @@ export function LoginForm() {
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="email" className="block text-sm text-[var(--color-text-secondary)] mb-1">
-            Email address
-          </label>
+          <label htmlFor="email" className="block text-sm text-[var(--color-text-secondary)] mb-1">Email address</label>
           <input
-            id="email"
-            type="email"
-            value={email}
+            id="email" type="email" value={email}
             onChange={e => setEmail(e.target.value)}
-            required
-            placeholder="you@example.com"
+            required placeholder="you@example.com"
             className="w-full px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded text-[var(--color-text)] placeholder:text-[var(--color-muted)] focus:outline-none focus:border-[var(--color-gold)] transition-colors"
           />
         </div>
         {error && <p className="text-[var(--color-error)] text-sm">{error}</p>}
-        <button
-          type="submit"
-          disabled={loading || !email}
-          className="w-full py-3 bg-[var(--color-gold)] text-[var(--color-midnight)] rounded font-semibold hover:bg-[var(--color-gold-light)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+        <button type="submit" disabled={loading || !email}
+          className="w-full py-3 bg-[var(--color-gold)] text-[var(--color-midnight)] rounded font-semibold hover:bg-[var(--color-gold-light)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
           {loading ? 'Sending…' : 'Send Magic Link'}
         </button>
       </form>
