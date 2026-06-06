@@ -168,3 +168,117 @@ function businessApprovedHtml(businessName: string, url: string) {
     </table>
   `)
 }
+
+// ─── Dunning: Payment Failed (Day 1) ─────────────────────────────────────────
+
+export async function sendPaymentFailed(to: string, businessName: string, retryDate: string) {
+  return resend.emails.send({
+    from: FROM,
+    to,
+    subject: `Action needed — payment failed for ${businessName}`,
+    html: wrap(`
+      <h1 style="font-family:Georgia,serif;font-size:26px;font-weight:700;color:#1a3a2a;margin:0 0 8px;">
+        We couldn't process your payment.
+      </h1>
+      <p style="font-size:15px;color:#6b7280;line-height:1.6;margin:0 0 20px;">
+        Your Professional Page for <strong style="color:#1a3a2a;">${businessName}</strong> is still active, but we weren't able to process your last payment.
+      </p>
+      <div style="background:#fdecea;border-left:4px solid #c62828;border-radius:4px;padding:16px 20px;margin-bottom:28px;">
+        <p style="margin:0;font-size:14px;color:#8B2020;line-height:1.6;">
+          We'll automatically retry on <strong>${retryDate}</strong>. If the payment fails again, your page will be downgraded to a free listing.
+        </p>
+      </div>
+      <p style="font-size:14px;color:#6b7280;line-height:1.6;margin:0 0 24px;">
+        Please update your payment method to keep your Professional Page active — including your contact info, photos, deals, events, and community leads.
+      </p>
+      <table cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+        <tr>
+          <td style="background:#c9a84c;border-radius:6px;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/billing" style="display:inline-block;padding:13px 28px;font-size:14px;font-weight:600;color:#1a3a2a;text-decoration:none;">
+              Update Payment Method →
+            </a>
+          </td>
+        </tr>
+      </table>
+      <hr style="border:none;border-top:1px solid #e5e0d5;margin:24px 0;" />
+      <p style="font-size:12px;color:#b0a898;margin:0;">
+        Questions? Reply to this email or visit your dashboard. We're here to help.
+      </p>
+    `),
+  })
+}
+
+// ─── Dunning: Final Warning (Day 5) ──────────────────────────────────────────
+
+export async function sendPaymentFinalWarning(to: string, businessName: string) {
+  return resend.emails.send({
+    from: FROM,
+    to,
+    subject: `Final notice — ${businessName} will be downgraded tomorrow`,
+    html: wrap(`
+      <h1 style="font-family:Georgia,serif;font-size:26px;font-weight:700;color:#1a3a2a;margin:0 0 8px;">
+        Last chance to keep your Professional Page.
+      </h1>
+      <p style="font-size:15px;color:#6b7280;line-height:1.6;margin:0 0 20px;">
+        We've made multiple attempts to process payment for <strong style="color:#1a3a2a;">${businessName}</strong>. Without a valid payment method, your page will be downgraded to a free listing <strong style="color:#c62828;">tomorrow</strong>.
+      </p>
+      <div style="background:#fdecea;border-left:4px solid #c62828;border-radius:4px;padding:16px 20px;margin-bottom:28px;">
+        <p style="font-size:14px;color:#8B2020;margin:0 0 8px;font-weight:700;">You'll lose access to:</p>
+        <ul style="margin:0;padding-left:20px;font-size:13px;color:#8B2020;line-height:1.8;">
+          <li>Contact info visible to customers</li>
+          <li>Photos, logo, and full business profile</li>
+          <li>Deals and events posting</li>
+          <li>Community leads and request board replies</li>
+          <li>Analytics dashboard</li>
+          <li>Gold Shield status (if applicable)</li>
+        </ul>
+      </div>
+      <table cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+        <tr>
+          <td style="background:#c62828;border-radius:6px;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/billing" style="display:inline-block;padding:13px 28px;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;">
+              Update Payment Now →
+            </a>
+          </td>
+        </tr>
+      </table>
+      <p style="font-size:13px;color:#b0a898;margin:0;">
+        You can reactivate at any time from your dashboard. Your listing data is saved.
+      </p>
+    `),
+  })
+}
+
+// ─── Dunning: Subscription Cancelled / Downgraded ────────────────────────────
+
+export async function sendSubscriptionCancelled(to: string, businessName: string) {
+  return resend.emails.send({
+    from: FROM,
+    to,
+    subject: `${businessName} has been downgraded to a free listing`,
+    html: wrap(`
+      <h1 style="font-family:Georgia,serif;font-size:26px;font-weight:700;color:#1a3a2a;margin:0 0 8px;">
+        Your Professional Page has been downgraded.
+      </h1>
+      <p style="font-size:15px;color:#6b7280;line-height:1.6;margin:0 0 20px;">
+        Due to payment failure, <strong style="color:#1a3a2a;">${businessName}</strong> has been downgraded to a free listing. Your business is still in the directory — customers can still find you by name and category.
+      </p>
+      <p style="font-size:14px;color:#6b7280;line-height:1.6;margin:0 0 24px;">
+        Reactivate anytime to restore your full profile, contact info, photos, deals, events, and community leads. Your data has been saved.
+      </p>
+      <table cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+        <tr>
+          <td style="background:#1a3a2a;border-radius:6px;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/billing" style="display:inline-block;padding:13px 28px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;">
+              Reactivate for $15/mo →
+            </a>
+          </td>
+        </tr>
+      </table>
+      <hr style="border:none;border-top:1px solid #e5e0d5;margin:24px 0;" />
+      <p style="font-size:12px;color:#b0a898;margin:0;">
+        We appreciate your support of District 1921 and the community. We hope to have you back soon.
+      </p>
+    `),
+  })
+}

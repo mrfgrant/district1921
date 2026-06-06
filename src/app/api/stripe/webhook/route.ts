@@ -1,160 +1,162 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { stripe } from '@/lib/stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
-import Stripe from 'stripe'
+import {
+  sendPaymentFailed,
+  sendPaymentFinalWarning,
+  sendSubscriptionCancelled,
+  sendBusinessApproved,
+} from '@/lib/email'
 
 export const dynamic = 'force-dynamic'
 
-// Helper: get subscription ID from an invoice (Stripe API changed in 2025)
-function getSubscriptionId(invoice: Stripe.Invoice): string | null {
-  // New API: subscription lives on invoice.parent.subscription_details.subscription
-  if (invoice.parent?.type === 'subscription_details') {
-    const sub = (invoice.parent as Stripe.Invoice.Parent & {
-      subscription_details?: { subscription?: string | Stripe.Subscription }
-    }).subscription_details?.subscription
-    if (sub) return typeof sub === 'string' ? sub : sub.id
-  }
-  return null
+async function getStripe() {
+  const Stripe = (await import('stripe')).default
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' as any })
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.text()
+  const stripe = await getStripe()
   const sig = req.headers.get('stripe-signature')!
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
+  const rawBody = await req.text()
 
-  let event: Stripe.Event
+  let event: any
   try {
-    event = stripe.webhooks.constructEvent(body, sig, webhookSecret)
-  } catch (err) {
-    console.error('Webhook signature verification failed:', err)
+    event = stripe.webhooks.constructEvent(
+      rawBody,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET!
+    )
+  } catch (err: any) {
+    console.error('Stripe webhook signature error:', err.message)
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
-  const supabase = createAdminClient()
+  const admin = createAdminClient()
 
   try {
     switch (event.type) {
 
-      // ── New checkout completed (subscription OR gold shield) ──────────────
-      case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session
-        const businessId = session.metadata?.businessId
-        if (!businessId) break
-
-        if (session.metadata?.type === 'gold_shield') {
-          await supabase
-            .from('shield_applications')
-            .update({ stripe_payment_intent_id: session.payment_intent as string })
-            .eq('business_id', businessId)
-        } else {
-          await supabase
-            .from('businesses')
-            .update({
-              subscription_status: 'active',
-              stripe_customer_id: session.customer as string,
-              stripe_subscription_id: session.subscription as string,
-              status: 'pending',
-            })
-            .eq('id', businessId)
-
-          const { data: biz } = await supabase
-            .from('businesses')
-            .select('owner_id')
-            .eq('id', businessId)
-            .single()
-
-          if (biz?.owner_id) {
-            await supabase
-              .from('profiles')
-              .update({ role: 'paid_owner' })
-              .eq('id', biz.owner_id)
-          }
-        }
-        break
-      }
-
-      // ── Subscription renewed successfully ─────────────────────────────────
+      // ── Subscription activated / renewed ──────────────────────
+      case 'customer.subscription.created':
       case 'invoice.payment_succeeded': {
-        const invoice = event.data.object as Stripe.Invoice
-        const subId = getSubscriptionId(invoice)
-        if (subId && invoice.billing_reason === 'subscription_cycle') {
-          await supabase
-            .from('businesses')
-            .update({ subscription_status: 'active' })
-            .eq('stripe_subscription_id', subId)
-        }
-        break
-      }
+        const obj = event.data.object
+        const customerId = obj.customer ?? obj.subscription?.customer
 
-      // ── Payment failed — mark past_due ────────────────────────────────────
-      case 'invoice.payment_failed': {
-        const invoice = event.data.object as Stripe.Invoice
-        const subId = getSubscriptionId(invoice)
-        if (subId) {
-          await supabase
-            .from('businesses')
-            .update({ subscription_status: 'past_due' })
-            .eq('stripe_subscription_id', subId)
-        }
-        // TODO: trigger dunning email via Resend
-        break
-      }
+        if (!customerId) break
 
-      // ── Subscription updated ──────────────────────────────────────────────
-      case 'customer.subscription.updated': {
-        const sub = event.data.object as Stripe.Subscription
-        const status =
-          sub.status === 'active' ? 'active'
-          : sub.status === 'past_due' ? 'past_due'
-          : 'canceled'
-        await supabase
+        const { data: biz } = await admin
           .from('businesses')
-          .update({ subscription_status: status })
-          .eq('stripe_subscription_id', sub.id)
-        break
-      }
-
-      // ── Subscription canceled — suspend listing, revoke shield ────────────
-      case 'customer.subscription.deleted': {
-        const sub = event.data.object as Stripe.Subscription
-        const { data: biz } = await supabase
-          .from('businesses')
-          .select('id, owner_id')
-          .eq('stripe_subscription_id', sub.id)
+          .select('id, name, slug, owner_id, profiles!owner_id(email)')
+          .eq('stripe_customer_id', customerId)
           .single()
 
-        if (biz) {
-          await supabase
-            .from('businesses')
-            .update({
-              subscription_status: 'canceled',
-              status: 'suspended',
-              gold_shield: false,
-              shield_approved_at: null,
-            })
-            .eq('id', biz.id)
+        if (!biz) break
 
-          if (biz.owner_id) {
-            await supabase
-              .from('profiles')
-              .update({ role: 'free_owner' })
-              .eq('id', biz.owner_id)
-          }
-        }
-        // TODO: send "your listing is paused" email via Resend
+        await admin.from('businesses').update({
+          subscription_status: 'active',
+          status: 'active',
+        }).eq('id', biz.id)
+
         break
       }
 
-      case 'payment_intent.succeeded':
-        // Gold Shield one-time payments handled via checkout.session.completed
-        break
+      // ── Payment failed (day 1) ─────────────────────────────────
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object
+        const customerId = invoice.customer
+        const nextRetry = invoice.next_payment_attempt
+          ? new Date(invoice.next_payment_attempt * 1000).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+          : 'soon'
 
-      default:
-        console.log(`Unhandled event type: ${event.type}`)
+        const { data: biz } = await admin
+          .from('businesses')
+          .select('id, name, owner_id, profiles!owner_id(email)')
+          .eq('stripe_customer_id', customerId)
+          .single()
+
+        if (!biz) break
+
+        const ownerEmail = (biz as any).profiles?.email
+        if (ownerEmail) {
+          await sendPaymentFailed(ownerEmail, biz.name, nextRetry)
+        }
+        break
+      }
+
+      // ── Subscription past due — final warning ─────────────────
+      case 'customer.subscription.updated': {
+        const sub = event.data.object
+        const prev = event.data.previous_attributes
+
+        // Only fire when status changes TO past_due
+        if (sub.status === 'past_due' && prev?.status !== 'past_due') {
+          const { data: biz } = await admin
+            .from('businesses')
+            .select('id, name, owner_id, profiles!owner_id(email)')
+            .eq('stripe_customer_id', sub.customer)
+            .single()
+
+          if (biz) {
+            const ownerEmail = (biz as any).profiles?.email
+            if (ownerEmail) {
+              await sendPaymentFinalWarning(ownerEmail, biz.name)
+            }
+          }
+        }
+
+        // Subscription reactivated
+        if (sub.status === 'active' && prev?.status && prev.status !== 'active') {
+          await admin.from('businesses').update({ subscription_status: 'active' })
+            .eq('stripe_customer_id', sub.customer)
+        }
+
+        break
+      }
+
+      // ── Subscription cancelled / expired ──────────────────────
+      case 'customer.subscription.deleted': {
+        const sub = event.data.object
+
+        const { data: biz } = await admin
+          .from('businesses')
+          .select('id, name, owner_id, gold_shield, profiles!owner_id(email)')
+          .eq('stripe_customer_id', sub.customer)
+          .single()
+
+        if (!biz) break
+
+        // Downgrade to free — revoke Gold Shield too
+        await admin.from('businesses').update({
+          subscription_status: 'cancelled',
+          gold_shield: false,
+        }).eq('id', biz.id)
+
+        // Update owner role back to free_owner
+        await admin.from('profiles').update({ role: 'free_owner' })
+          .eq('id', biz.owner_id)
+
+        const ownerEmail = (biz as any).profiles?.email
+        if (ownerEmail) {
+          await sendSubscriptionCancelled(ownerEmail, biz.name)
+        }
+        break
+      }
+
+      // ── Gold Shield one-time payment succeeded ─────────────────
+      case 'checkout.session.completed': {
+        const session = event.data.object
+        if (session.mode !== 'payment') break
+        if (!session.metadata?.businessId) break
+
+        await admin.from('businesses').update({ gold_shield: true })
+          .eq('id', session.metadata.businessId)
+
+        break
+      }
+
     }
   } catch (err) {
-    console.error(`Error handling ${event.type}:`, err)
-    return NextResponse.json({ error: 'Handler error' }, { status: 500 })
+    console.error(`Webhook handler error for ${event.type}:`, err)
   }
 
   return NextResponse.json({ received: true })
