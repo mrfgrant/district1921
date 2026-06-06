@@ -1,506 +1,395 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { CATEGORY_LABELS, BusinessCategory, BusinessHours } from '@/types'
 import { slugify } from '@/lib/utils'
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
+type ServiceType = 'storefront' | 'mobile_only' | 'both'
 interface FormData {
-  // Step 1 — Business basics
-  name: string
-  category: BusinessCategory | ''
-  honor_pledge: boolean
-
-  // Step 2 — Location
-  is_mobile_service: boolean
-  address: string
-  city: string
-  state: string
-  zip: string
-
-  // Step 3 — Contact & web (paid features, but collected upfront)
-  phone: string
-  website: string
-  email: string
-
-  // Step 4 — Description
-  description: string
-
-  // Step 5 — Hours
-  hours: BusinessHours
+  name: string; category: BusinessCategory | ''; honor_pledge: boolean
+  service_type: ServiceType; address: string; suite: string
+  city: string; state: string; zip: string
+  phone: string; website: string; email: string
+  description: string; hours: BusinessHours
 }
-
 const STEPS = [
-  { id: 1, label: 'Business Info' },
-  { id: 2, label: 'Location' },
-  { id: 3, label: 'Contact' },
-  { id: 4, label: 'About' },
-  { id: 5, label: 'Hours' },
-  { id: 6, label: 'Review' },
+  { id: 1, label: 'Business Info' },{ id: 2, label: 'Location' },
+  { id: 3, label: 'Contact' },{ id: 4, label: 'About' },
+  { id: 5, label: 'Hours' },{ id: 6, label: 'Review' },
 ]
-
-const US_STATES = [
-  'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA',
-  'KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
-  'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT',
-  'VA','WA','WV','WI','WY','DC',
-]
-
+const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC']
 const DAYS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'] as const
-const DAY_LABELS: Record<string, string> = {
-  monday: 'Monday', tuesday: 'Tuesday', wednesday: 'Wednesday',
-  thursday: 'Thursday', friday: 'Friday', saturday: 'Saturday', sunday: 'Sunday',
-}
-
+const DAY_LABELS: Record<string,string> = { monday:'Monday',tuesday:'Tuesday',wednesday:'Wednesday',thursday:'Thursday',friday:'Friday',saturday:'Saturday',sunday:'Sunday' }
 const EMPTY_HOURS: BusinessHours = {
-  monday:    { open: '09:00', close: '17:00', closed: false },
-  tuesday:   { open: '09:00', close: '17:00', closed: false },
-  wednesday: { open: '09:00', close: '17:00', closed: false },
-  thursday:  { open: '09:00', close: '17:00', closed: false },
-  friday:    { open: '09:00', close: '17:00', closed: false },
-  saturday:  { open: '10:00', close: '15:00', closed: false },
-  sunday:    { open: '10:00', close: '15:00', closed: true  },
+  monday:{open:'09:00',close:'17:00',closed:false},tuesday:{open:'09:00',close:'17:00',closed:false},
+  wednesday:{open:'09:00',close:'17:00',closed:false},thursday:{open:'09:00',close:'17:00',closed:false},
+  friday:{open:'09:00',close:'17:00',closed:false},saturday:{open:'10:00',close:'15:00',closed:false},
+  sunday:{open:'10:00',close:'15:00',closed:true},
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+function AddressAutocomplete({ value, onChange, onPlaceSelect }: {
+  value: string; onChange: (v: string) => void
+  onPlaceSelect: (p: { address: string; city: string; state: string; zip: string }) => void
+}) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const acRef = useRef<google.maps.places.Autocomplete | null>(null)
+  const onPlaceSelectRef = useRef(onPlaceSelect)
+  useEffect(() => { onPlaceSelectRef.current = onPlaceSelect }, [onPlaceSelect])
 
-export function OnboardingFlow({ userId, userEmail }: { userId: string; userEmail: string }) {
+  useEffect(() => {
+    if (!inputRef.current || !window.google?.maps?.places) return
+    acRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
+      types: ['address'], componentRestrictions: { country: 'us' },
+      fields: ['address_components'],
+    })
+    acRef.current.addListener('place_changed', () => {
+      const place = acRef.current!.getPlace()
+      if (!place.address_components) return
+      let num='',route='',city='',state='',zip=''
+      for (const c of place.address_components) {
+        if (c.types.includes('street_number')) num = c.long_name
+        if (c.types.includes('route')) route = c.long_name
+        if (c.types.includes('locality')) city = c.long_name
+        if (c.types.includes('administrative_area_level_1')) state = c.short_name
+        if (c.types.includes('postal_code')) zip = c.long_name
+      }
+      const address = [num,route].filter(Boolean).join(' ')
+      onChange(address)
+      onPlaceSelectRef.current({ address, city, state, zip })
+    })
+  }, [onChange])
+
+  return (
+    <input ref={inputRef} type="text" className="ob-input"
+      placeholder="Start typing your street address..." value={value}
+      onChange={e => onChange(e.target.value)} autoComplete="off" />
+  )
+}
+
+export function OnboardingFlow({ userId, userEmail, isAdmin }: {
+  userId: string; userEmail: string; isAdmin?: boolean
+}) {
   const router = useRouter()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [cleaning, setCleaning] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [mapsLoaded, setMapsLoaded] = useState(false)
 
   const [form, setForm] = useState<FormData>({
-    name: '', category: '', honor_pledge: false,
-    is_mobile_service: false, address: '', city: '', state: '', zip: '',
-    phone: '', website: '', email: userEmail,
-    description: '',
-    hours: EMPTY_HOURS,
+    name:'', category:'', honor_pledge:false, service_type:'storefront',
+    address:'', suite:'', city:'', state:'', zip:'',
+    phone:'', website:'', email:userEmail, description:'', hours:EMPTY_HOURS,
   })
 
-  function set<K extends keyof FormData>(key: K, value: FormData[K]) {
-    setForm(f => ({ ...f, [key]: value }))
-    setError(null)
-  }
+  useEffect(() => {
+    if ((window as any).google?.maps?.places) { setMapsLoaded(true); return }
+    const s = document.createElement('script')
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`
+    s.async = true; s.onload = () => setMapsLoaded(true)
+    document.head.appendChild(s)
+  }, [])
 
-  function setHours(day: string, field: 'open' | 'close' | 'closed', value: string | boolean) {
-    setForm(f => ({
-      ...f,
-      hours: {
-        ...f.hours,
-        [day]: { ...f.hours[day as keyof BusinessHours], [field]: value },
-      },
-    }))
+  const setField = <K extends keyof FormData>(key: K, val: FormData[K]) => {
+    setForm(f => ({ ...f, [key]: val })); setError(null)
   }
+  const setHours = (day: string, field: 'open'|'close'|'closed', val: string|boolean) =>
+    setForm(f => ({ ...f, hours: { ...f.hours, [day]: { ...f.hours[day as keyof BusinessHours], [field]: val } } }))
 
-  function canAdvance(): boolean {
+  const handleAddressChange = useCallback((v: string) => setField('address', v), [])
+  const handlePlaceSelect = useCallback(({ address, city, state, zip }: { address: string; city: string; state: string; zip: string }) => {
+    setForm(f => ({ ...f, address, city, state, zip }))
+  }, [])
+
+  const needsAddress = form.service_type !== 'mobile_only'
+
+  function canAdvance() {
     if (step === 1) return !!form.name.trim() && !!form.category && form.honor_pledge
-    if (step === 2) return !!form.city.trim() && !!form.state && (form.is_mobile_service || !!form.address.trim())
-    if (step === 3) return true // contact optional
+    if (step === 2) return needsAddress ? (!!form.address && !!form.city && !!form.state) : (!!form.city && !!form.state)
     if (step === 4) return form.description.trim().length >= 20
-    if (step === 5) return true
     return true
   }
 
+  async function cleanWithAI() {
+    if (form.description.trim().length < 20) return
+    setCleaning(true)
+    try {
+      const res = await fetch('/api/ai/clean-description', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: form.description, businessName: form.name }),
+      })
+      if (res.ok) { const { cleaned } = await res.json(); setField('description', cleaned) }
+    } finally { setCleaning(false) }
+  }
+
   async function handleSubmit() {
-    setLoading(true)
-    setError(null)
+    setLoading(true); setError(null)
     try {
       const res = await fetch('/api/businesses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...form,
-          slug: slugify(form.name) + '-' + Math.random().toString(36).slice(2, 6),
-          owner_id: userId,
+          ...form, is_mobile_service: form.service_type !== 'storefront',
+          slug: slugify(form.name) + '-' + Math.random().toString(36).slice(2,6),
+          owner_id: userId, is_admin: isAdmin,
         }),
       })
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error || 'Submission failed')
-      }
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Submission failed') }
       router.push('/dashboard?submitted=1')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
-    } finally {
-      setLoading(false)
-    }
+    } catch (err) { setError(err instanceof Error ? err.message : 'Something went wrong') }
+    finally { setLoading(false) }
   }
+
+  const S: React.CSSProperties = { fontFamily: "'Playfair Display', serif" }
 
   return (
     <div className="min-h-screen bg-[#faf7f0]">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600&display=swap');
-        .ob * { box-sizing: border-box; }
-        .ob { font-family: 'DM Sans', sans-serif; }
-        .ob-input {
-          width: 100%; padding: 12px 16px;
-          border: 1px solid #e5e0d5; border-radius: 6px;
-          font-family: 'DM Sans', sans-serif; font-size: 14px;
-          color: #1c1c1c; background: #fff; outline: none;
-          transition: border-color 0.15s;
-        }
-        .ob-input:focus { border-color: #2d6a4f; }
-        .ob-input::placeholder { color: #b0a898; }
-        .ob-label { display: block; font-size: 13px; font-weight: 600; color: #1c1c1c; margin-bottom: 6px; }
-        .ob-sublabel { display: block; font-size: 12px; color: #6b7280; margin-bottom: 8px; margin-top: -2px; }
-        .ob-field { margin-bottom: 20px; }
-        .ob-select {
-          width: 100%; padding: 12px 16px;
-          border: 1px solid #e5e0d5; border-radius: 6px;
-          font-family: 'DM Sans', sans-serif; font-size: 14px;
-          color: #1c1c1c; background: #fff; outline: none;
-          cursor: pointer; appearance: none;
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-          background-repeat: no-repeat; background-position: right 14px center;
-        }
-        .ob-select:focus { border-color: #2d6a4f; }
-        .ob-cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        @media(max-width: 540px) { .ob-cat-grid { grid-template-columns: 1fr; } }
-        .ob-cat-btn {
-          padding: 12px 14px; border: 1px solid #e5e0d5; border-radius: 8px;
-          background: #fff; cursor: pointer; text-align: left;
-          font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
-          color: #6b7280; transition: all 0.15s;
-        }
-        .ob-cat-btn:hover { border-color: #2d6a4f; color: #2d6a4f; background: #f0faf4; }
-        .ob-cat-btn.selected { border-color: #1a3a2a; background: #1a3a2a; color: #fff; }
-        .ob-toggle {
-          display: flex; align-items: center; gap: 12px;
-          padding: 14px 16px; border: 1px solid #e5e0d5; border-radius: 8px;
-          background: #fff; cursor: pointer; transition: all 0.15s; margin-bottom: 12px;
-        }
-        .ob-toggle:hover { border-color: #2d6a4f; }
-        .ob-toggle.checked { border-color: #2d6a4f; background: #f0faf4; }
-        .ob-toggle-box {
-          width: 20px; height: 20px; border-radius: 4px;
-          border: 2px solid #d8d0c4; background: #fff;
-          display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0; transition: all 0.15s;
-        }
-        .ob-toggle.checked .ob-toggle-box { border-color: #2d6a4f; background: #2d6a4f; }
-        .ob-pledge {
-          background: #d8f3dc; border: 1px solid #b8e0c4; border-left: 3px solid #2d6a4f;
-          border-radius: 8px; padding: 16px 18px; margin-bottom: 20px; cursor: pointer;
-          transition: all 0.15s;
-        }
-        .ob-pledge.checked { background: #f0faf4; border-left-color: #1a3a2a; }
-        .ob-pledge-title { font-size: 14px; font-weight: 600; color: #1a3a2a; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
-        .ob-pledge-text { font-size: 13px; color: #2d6a4f; line-height: 1.65; }
-        .ob-hours-row {
-          display: grid; grid-template-columns: 100px 1fr 1fr 80px;
-          gap: 8px; align-items: center; padding: 10px 0;
-          border-bottom: 1px solid #f0ebe0;
-        }
-        .ob-hours-row:last-child { border-bottom: none; }
-        .ob-day-label { font-size: 13px; font-weight: 600; color: #1c1c1c; }
-        .ob-time-input {
-          padding: 8px 10px; border: 1px solid #e5e0d5; border-radius: 6px;
-          font-family: 'DM Sans', sans-serif; font-size: 13px;
-          color: #1c1c1c; background: #fff; outline: none; width: 100%;
-        }
-        .ob-time-input:focus { border-color: #2d6a4f; }
-        .ob-time-input:disabled { background: #f5f0e8; color: #b0a898; }
-        .ob-closed-btn {
-          padding: 7px 10px; border: 1px solid #e5e0d5; border-radius: 6px;
-          font-size: 12px; font-weight: 500; cursor: pointer; text-align: center;
-          transition: all 0.15s; background: #fff; color: #6b7280;
-        }
-        .ob-closed-btn.active { background: #fdecea; border-color: #f5c6c6; color: #c62828; }
-        .ob-review-row {
-          display: flex; justify-content: space-between; align-items: flex-start;
-          padding: 12px 0; border-bottom: 1px solid #f0ebe0; gap: 16px;
-        }
-        .ob-review-row:last-child { border-bottom: none; }
-        .ob-review-key { font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0; width: 120px; }
-        .ob-review-val { font-size: 14px; color: #1c1c1c; text-align: right; }
+        .ob,.ob *{box-sizing:border-box;font-family:'DM Sans',sans-serif}
+        .ob-input{width:100%;padding:12px 16px;border:1.5px solid #d4cfc7;border-radius:6px;font-size:14px;color:#1c1c1c;background:#fff;outline:none;transition:border-color 0.15s,box-shadow 0.15s;display:block}
+        .ob-input:focus{border-color:#2d6a4f;box-shadow:0 0 0 3px rgba(45,106,79,0.1)}
+        .ob-input::placeholder{color:#b0a898}
+        .ob-label{display:block;font-size:13px;font-weight:600;color:#1c1c1c;margin-bottom:6px}
+        .ob-sublabel{display:block;font-size:12px;color:#6b7280;margin-bottom:8px;margin-top:-2px}
+        .ob-field{margin-bottom:20px}
+        .ob-select{width:100%;padding:12px 16px;border:1.5px solid #d4cfc7;border-radius:6px;font-size:14px;color:#1c1c1c;background:#fff;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+        .ob-select:focus{border-color:#2d6a4f}
+        .ob-cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+        .ob-cat-btn{padding:13px 16px;border:1.5px solid #d4cfc7;border-radius:8px;background:#fff;cursor:pointer;text-align:left;font-size:13px;font-weight:500;color:#6b7280;transition:all 0.15s}
+        .ob-cat-btn:hover{border-color:#2d6a4f;color:#2d6a4f;background:#f0faf4}
+        .ob-cat-btn.selected{border-color:#1a3a2a;background:#1a3a2a;color:#fff;font-weight:600}
+        .ob-svc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
+        .ob-svc{border:1.5px solid #d4cfc7;border-radius:10px;padding:18px 12px;cursor:pointer;transition:all 0.15s;background:#fff;text-align:center}
+        .ob-svc:hover{border-color:#2d6a4f;background:#f8fdf9}
+        .ob-svc.sel{border-color:#1a3a2a;background:#f0faf4}
+        .ob-svc .si{font-size:26px;margin-bottom:8px}
+        .ob-svc .st{font-size:13px;font-weight:700;color:#1c1c1c;margin-bottom:4px}
+        .ob-svc.sel .st{color:#1a3a2a}
+        .ob-svc .sd{font-size:11px;color:#6b7280;line-height:1.4}
+        .ob-pledge{background:#f0faf4;border:1.5px solid #b8e0c4;border-radius:10px;padding:16px 18px;cursor:pointer;transition:all 0.15s;display:flex;align-items:flex-start;gap:14px}
+        .ob-pledge:hover{border-color:#2d6a4f}
+        .ob-pledge.chk{border-color:#1a3a2a;background:#e6f4ea}
+        .ob-box{width:22px;height:22px;border-radius:5px;flex-shrink:0;border:2px solid #c8d4c0;background:#fff;display:flex;align-items:center;justify-content:center;transition:all 0.15s;margin-top:2px}
+        .ob-pledge.chk .ob-box{background:#1a3a2a;border-color:#1a3a2a}
+        .ob-ck{color:#fff;font-size:13px;font-weight:800;line-height:1}
+        .ob-hr-row{display:grid;grid-template-columns:110px 1fr 1fr 90px;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid #f0ebe0}
+        .ob-hr-row:last-child{border-bottom:none}
+        .ob-ti{padding:8px 10px;border:1.5px solid #d4cfc7;border-radius:6px;font-size:13px;color:#1c1c1c;background:#fff;outline:none;width:100%}
+        .ob-ti:disabled{background:#f5f0e8;color:#b0a898;cursor:not-allowed}
+        .ob-hbtn{padding:8px 6px;border:1.5px solid #d4cfc7;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:all 0.15s;background:#fff;color:#6b7280;white-space:nowrap}
+        .ob-hbtn.closed{background:#fdecea;border-color:#f5c6c6;color:#c62828}
+        .ob-hbtn.open{background:#e8f5e9;border-color:#b8ddc0;color:#2e7d32}
+        .ob-rrow{display:flex;justify-content:space-between;align-items:flex-start;padding:12px 0;border-bottom:1px solid #f0ebe0;gap:16px}
+        .ob-rrow:last-child{border-bottom:none}
+        .ob-rk{font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;flex-shrink:0;width:130px;margin-top:2px}
+        .ob-rv{font-size:14px;color:#1c1c1c;text-align:right;max-width:60%}
+        .pac-container{z-index:9999!important;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);border:1px solid #e5e0d5;font-family:'DM Sans',sans-serif}
+        .pac-item{padding:8px 14px;font-size:13px;cursor:pointer}
+        .pac-item:hover,.pac-item-selected{background:#f0faf4}
       `}</style>
 
       <div className="ob">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-[#1a3a2a] border-b border-[#2d6a4f]">
+        <div className="sticky top-0 z-10 bg-[#1a3a2a]">
           <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
-            <span className="font-display text-lg font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
-              District <span className="text-[#c9a84c]">1921</span>
+            <span style={{...S, fontSize:'20px', fontWeight:900, color:'#fff'}}>
+              District <span style={{color:'#c9a84c'}}>1921</span>
             </span>
             <span className="text-sm text-white/60">Set up your business</span>
           </div>
         </div>
 
-        {/* Step progress */}
+        {/* Progress */}
         <div className="bg-white border-b border-[#e5e0d5]">
           <div className="max-w-2xl mx-auto px-4 py-4">
-            <div className="flex items-center gap-0">
+            <div className="flex items-center">
               {STEPS.map((s, i) => (
                 <div key={s.id} className="flex items-center flex-1">
                   <div className="flex flex-col items-center">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                      step > s.id ? 'bg-[#2d6a4f] text-white' :
-                      step === s.id ? 'bg-[#1a3a2a] text-white' :
-                      'bg-[#f0ebe0] text-[#b0a898]'
-                    }`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step > s.id ? 'bg-[#2d6a4f] text-white' : step === s.id ? 'bg-[#1a3a2a] text-white' : 'bg-[#f0ebe0] text-[#b0a898]'}`}>
                       {step > s.id ? '✓' : s.id}
                     </div>
-                    <span className={`text-xs mt-1 font-medium hidden sm:block ${step >= s.id ? 'text-[#1a3a2a]' : 'text-[#b0a898]'}`}>
-                      {s.label}
-                    </span>
+                    <span className={`text-xs mt-1 font-medium hidden sm:block ${step >= s.id ? 'text-[#1a3a2a]' : 'text-[#b0a898]'}`}>{s.label}</span>
                   </div>
-                  {i < STEPS.length - 1 && (
-                    <div className={`h-0.5 flex-1 mx-1 transition-all ${step > s.id ? 'bg-[#2d6a4f]' : 'bg-[#e5e0d5]'}`} />
-                  )}
+                  {i < STEPS.length - 1 && <div className={`h-0.5 flex-1 mx-1 ${step > s.id ? 'bg-[#2d6a4f]' : 'bg-[#e5e0d5]'}`} />}
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Form body */}
         <div className="max-w-2xl mx-auto px-4 py-8">
+          {isAdmin && (
+            <div style={{display:'inline-flex',alignItems:'center',gap:6,background:'#c9a84c',color:'#1a3a2a',padding:'4px 12px',borderRadius:4,fontSize:11,fontWeight:700,letterSpacing:'0.05em',marginBottom:16}}>
+              ⭐ Admin — listing goes live immediately
+            </div>
+          )}
 
-          {/* STEP 1 — Business Basics */}
+          {/* STEP 1 */}
           {step === 1 && (
             <div>
-              <h1 className="text-2xl font-bold text-[#1a3a2a] mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
-                Tell us about your business
-              </h1>
-              <p className="text-[#6b7280] text-sm mb-8">This is how your business will appear in the directory.</p>
+              <h1 style={{...S, fontSize:'26px', fontWeight:700, color:'#1a3a2a', marginBottom:6}}>Tell us about your business</h1>
+              <p style={{fontSize:14, color:'#6b7280', marginBottom:32}}>This is how your business will appear in the directory.</p>
 
               <div className="ob-field">
                 <label className="ob-label">Business Name</label>
-                <input
-                  className="ob-input"
-                  type="text"
-                  placeholder="e.g. Mama's Southern Kitchen"
-                  value={form.name}
-                  onChange={e => set('name', e.target.value)}
-                  maxLength={100}
-                  autoFocus
-                />
+                <input className="ob-input" type="text" placeholder="e.g. Mama's Southern Kitchen"
+                  value={form.name} onChange={e => setField('name', e.target.value)} maxLength={100} autoFocus />
                 {form.name && (
-                  <p className="text-xs text-[#8a7a5a] mt-2">
-                    Your listing will appear at: <span className="font-mono text-[#2d6a4f]">district1921.com/business/{slugify(form.name) || '...'}</span>
+                  <p style={{fontSize:12,color:'#8a7a5a',marginTop:6}}>
+                    Your listing URL: <span style={{fontFamily:'monospace',color:'#2d6a4f'}}>district1921.com/business/{slugify(form.name)||'...'}</span>
                   </p>
                 )}
               </div>
 
               <div className="ob-field">
                 <label className="ob-label">Category</label>
-                <span className="ob-sublabel">Choose the category that best describes your business.</span>
+                <span className="ob-sublabel">Choose the one that best describes your business.</span>
                 <div className="ob-cat-grid">
-                  {(Object.entries(CATEGORY_LABELS) as [BusinessCategory, string][]).map(([value, label]) => (
-                    <button
-                      key={value}
-                      type="button"
-                      className={`ob-cat-btn ${form.category === value ? 'selected' : ''}`}
-                      onClick={() => set('category', value)}
-                    >
-                      {label}
-                    </button>
+                  {(Object.entries(CATEGORY_LABELS) as [BusinessCategory, string][]).map(([val, label]) => (
+                    <button key={val} type="button" className={`ob-cat-btn ${form.category === val ? 'selected' : ''}`} onClick={() => setField('category', val)}>{label}</button>
                   ))}
                 </div>
               </div>
 
-              <div
-                className={`ob-pledge ${form.honor_pledge ? 'checked' : ''}`}
-                onClick={() => set('honor_pledge', !form.honor_pledge)}
-              >
-                <div className="ob-pledge-title">
-                  <div className={`ob-toggle-box ${form.honor_pledge ? 'checked' : ''}`}>
-                    {form.honor_pledge && <span style={{ color: '#fff', fontSize: '11px', fontWeight: 700 }}>✓</span>}
+              <div className="ob-field">
+                <div className={`ob-pledge ${form.honor_pledge ? 'chk' : ''}`} onClick={() => setField('honor_pledge', !form.honor_pledge)}>
+                  <div className="ob-box">{form.honor_pledge && <span className="ob-ck">✓</span>}</div>
+                  <div>
+                    <div style={{fontSize:14,fontWeight:700,color:'#1a3a2a',marginBottom:5}}>Honor Pledge</div>
+                    <div style={{fontSize:13,color:'#2d6a4f',lineHeight:1.6}}>I affirm that this business is community-owned and operated. I understand that District 1921 is built on trust, and I will represent my business honestly.</div>
                   </div>
-                  Honor Pledge
-                </div>
-                <div className="ob-pledge-text">
-                  I affirm that this business is community-owned and operated. I understand that District 1921 is built on trust, and I will represent my business honestly.
                 </div>
               </div>
             </div>
           )}
 
-          {/* STEP 2 — Location */}
+          {/* STEP 2 */}
           {step === 2 && (
             <div>
-              <h1 className="text-2xl font-bold text-[#1a3a2a] mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
-                Where are you located?
-              </h1>
-              <p className="text-[#6b7280] text-sm mb-8">Help customers find you. Mobile businesses only need city and state.</p>
+              <h1 style={{...S, fontSize:'26px', fontWeight:700, color:'#1a3a2a', marginBottom:6}}>Where are you located?</h1>
+              <p style={{fontSize:14, color:'#6b7280', marginBottom:28}}>Mobile-only businesses just need city and state.</p>
 
-              <div
-                className={`ob-toggle ${form.is_mobile_service ? 'checked' : ''}`}
-                onClick={() => set('is_mobile_service', !form.is_mobile_service)}
-              >
-                <div className={`ob-toggle-box ${form.is_mobile_service ? 'checked' : ''}`}>
-                  {form.is_mobile_service && <span style={{ color: '#fff', fontSize: '11px', fontWeight: 700 }}>✓</span>}
-                </div>
-                <div>
-                  <div className="text-sm font-semibold text-[#1c1c1c]">📱 I offer mobile or on-site services</div>
-                  <div className="text-xs text-[#6b7280] mt-0.5">I come to my customers. No fixed storefront address required.</div>
+              <div className="ob-field">
+                <label className="ob-label">Service Type</label>
+                <div className="ob-svc-grid">
+                  {([
+                    {type:'storefront',icon:'🏪',title:'Storefront',desc:'Customers come to a fixed location'},
+                    {type:'mobile_only',icon:'📱',title:'Mobile Only',desc:'I travel to my customers'},
+                    {type:'both',icon:'🏪📱',title:'Both',desc:'Fixed location + mobile service'},
+                  ] as {type:ServiceType;icon:string;title:string;desc:string}[]).map(o => (
+                    <div key={o.type} className={`ob-svc ${form.service_type===o.type?'sel':''}`} onClick={() => setField('service_type', o.type)}>
+                      <div className="si">{o.icon}</div>
+                      <div className="st">{o.title}</div>
+                      <div className="sd">{o.desc}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {!form.is_mobile_service && (
-                <div className="ob-field">
-                  <label className="ob-label">Street Address</label>
-                  <input
-                    className="ob-input"
-                    type="text"
-                    placeholder="1842 Broad St"
-                    value={form.address}
-                    onChange={e => set('address', e.target.value)}
-                  />
-                </div>
+              {needsAddress && (
+                <>
+                  <div className="ob-field">
+                    <label className="ob-label">Street Address</label>
+                    <span className="ob-sublabel">Start typing — we'll auto-fill city, state, and ZIP.</span>
+                    {mapsLoaded
+                      ? <AddressAutocomplete value={form.address} onChange={handleAddressChange} onPlaceSelect={handlePlaceSelect} />
+                      : <input className="ob-input" type="text" placeholder="1842 Broad St" value={form.address} onChange={e => setField('address', e.target.value)} />
+                    }
+                  </div>
+                  <div className="ob-field">
+                    <label className="ob-label">Suite / Unit / Floor <span style={{color:'#b0a898',fontWeight:400}}>(optional)</span></label>
+                    <input className="ob-input" type="text" placeholder="Suite 200, Unit 4B, Floor 3..." value={form.suite} onChange={e => setField('suite', e.target.value)} />
+                  </div>
+                </>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
+              <div style={{display:'grid', gridTemplateColumns:'1fr 100px', gap:12}}>
                 <div className="ob-field">
-                  <label className="ob-label">City <span className="text-[#c62828]">*</span></label>
-                  <input
-                    className="ob-input"
-                    type="text"
-                    placeholder="Augusta"
-                    value={form.city}
-                    onChange={e => set('city', e.target.value)}
-                  />
+                  <label className="ob-label">City <span style={{color:'#c62828'}}>*</span></label>
+                  <input className="ob-input" type="text" placeholder="Augusta" value={form.city} onChange={e => setField('city', e.target.value)} />
                 </div>
                 <div className="ob-field">
-                  <label className="ob-label">State <span className="text-[#c62828]">*</span></label>
-                  <select className="ob-select" value={form.state} onChange={e => set('state', e.target.value)}>
-                    <option value="">Select state</option>
+                  <label className="ob-label">State <span style={{color:'#c62828'}}>*</span></label>
+                  <select className="ob-select" value={form.state} onChange={e => setField('state', e.target.value)}>
+                    <option value="">—</option>
                     {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
               </div>
 
-              {!form.is_mobile_service && (
-                <div className="ob-field" style={{ width: '50%' }}>
+              {needsAddress && (
+                <div className="ob-field" style={{maxWidth:180}}>
                   <label className="ob-label">ZIP Code</label>
-                  <input
-                    className="ob-input"
-                    type="text"
-                    placeholder="30901"
-                    value={form.zip}
-                    onChange={e => set('zip', e.target.value)}
-                    maxLength={10}
-                  />
+                  <input className="ob-input" type="text" placeholder="30901" value={form.zip} onChange={e => setField('zip', e.target.value)} maxLength={10} />
                 </div>
               )}
             </div>
           )}
 
-          {/* STEP 3 — Contact */}
+          {/* STEP 3 */}
           {step === 3 && (
             <div>
-              <h1 className="text-2xl font-bold text-[#1a3a2a] mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
-                How can customers reach you?
-              </h1>
-              <p className="text-[#6b7280] text-sm mb-2">All fields optional for now — you can add these anytime in your dashboard.</p>
-              <div className="bg-[#f5e6c0] border border-[#e8d090] rounded-lg px-4 py-3 mb-8 text-sm text-[#5a4a20]">
-                📋 Contact info is only visible on <strong>Professional Pages</strong> ($15/mo). Free listings show name, category, and city only.
+              <h1 style={{...S, fontSize:'26px', fontWeight:700, color:'#1a3a2a', marginBottom:6}}>How can customers reach you?</h1>
+              <p style={{fontSize:14, color:'#6b7280', marginBottom:12}}>All optional — add or update anytime from your dashboard.</p>
+              <div style={{background:'#fef9ee',border:'1px solid #e8d090',borderLeft:'3px solid #c9a84c',borderRadius:8,padding:'14px 18px',marginBottom:24,fontSize:13,color:'#5a4a20',lineHeight:1.6}}>
+                📋 Contact info is <strong>only visible on Professional Pages</strong> ($15/mo). Free listings show name, category, and city only.
               </div>
-
-              <div className="ob-field">
-                <label className="ob-label">Phone Number</label>
-                <input
-                  className="ob-input"
-                  type="tel"
-                  placeholder="(706) 555-0182"
-                  value={form.phone}
-                  onChange={e => set('phone', e.target.value)}
-                />
-              </div>
-
-              <div className="ob-field">
-                <label className="ob-label">Website</label>
-                <input
-                  className="ob-input"
-                  type="url"
-                  placeholder="https://yourwebsite.com"
-                  value={form.website}
-                  onChange={e => set('website', e.target.value)}
-                />
-              </div>
-
+              <div className="ob-field"><label className="ob-label">Phone Number</label><input className="ob-input" type="tel" placeholder="(706) 555-0182" value={form.phone} onChange={e => setField('phone', e.target.value)} /></div>
+              <div className="ob-field"><label className="ob-label">Website</label><input className="ob-input" type="url" placeholder="https://yourwebsite.com" value={form.website} onChange={e => setField('website', e.target.value)} /></div>
               <div className="ob-field">
                 <label className="ob-label">Business Email</label>
-                <span className="ob-sublabel">For customer contact — separate from your login email if needed.</span>
-                <input
-                  className="ob-input"
-                  type="email"
-                  placeholder="hello@yourbusiness.com"
-                  value={form.email}
-                  onChange={e => set('email', e.target.value)}
-                />
+                <span className="ob-sublabel">For customer contact — can differ from your login email.</span>
+                <input className="ob-input" type="email" placeholder="hello@yourbusiness.com" value={form.email} onChange={e => setField('email', e.target.value)} />
               </div>
             </div>
           )}
 
-          {/* STEP 4 — Description */}
+          {/* STEP 4 */}
           {step === 4 && (
             <div>
-              <h1 className="text-2xl font-bold text-[#1a3a2a] mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
-                Tell your story
-              </h1>
-              <p className="text-[#6b7280] text-sm mb-8">This appears on your business page. Write naturally — tell people who you are and what makes you different.</p>
-
+              <h1 style={{...S, fontSize:'26px', fontWeight:700, color:'#1a3a2a', marginBottom:6}}>Tell your story</h1>
+              <p style={{fontSize:14, color:'#6b7280', marginBottom:28}}>Write naturally — who you are, what you offer, what makes you different. Our AI will polish it up.</p>
               <div className="ob-field">
-                <label className="ob-label">Business Description</label>
-                <span className="ob-sublabel">At least 20 characters. Be specific — what do you offer, who do you serve, what's your story?</span>
-                <textarea
-                  className="ob-input"
-                  rows={7}
-                  placeholder="e.g. We've been serving Augusta since 1987, specializing in authentic Southern cuisine made from scratch daily. Founded by Dorothy 'Mama' Williams, our recipes have been passed down through four generations..."
-                  value={form.description}
-                  onChange={e => set('description', e.target.value)}
-                  style={{ resize: 'vertical', lineHeight: '1.65' }}
-                />
-                <div className="flex justify-between mt-1">
-                  <span className="text-xs text-[#6b7280]">
-                    {form.description.length < 20
-                      ? `${20 - form.description.length} more characters needed`
-                      : '✓ Looks good'}
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+                  <label className="ob-label" style={{margin:0}}>Business Description</label>
+                  <button type="button" onClick={cleanWithAI}
+                    disabled={cleaning || form.description.trim().length < 20}
+                    style={{display:'flex',alignItems:'center',gap:6,padding:'7px 14px',borderRadius:6,border:'1.5px solid #2d6a4f',background:cleaning?'#e8f5ec':'#fff',color:'#2d6a4f',fontSize:12,fontWeight:700,cursor:cleaning||form.description.trim().length<20?'not-allowed':'pointer',opacity:form.description.trim().length<20?0.45:1,transition:'all 0.15s'}}>
+                    {cleaning ? '✨ Polishing...' : '✨ Polish with AI'}
+                  </button>
+                </div>
+                <span className="ob-sublabel">Minimum 20 characters. Be specific — what do you offer and what's your story?</span>
+                <textarea className="ob-input" rows={7}
+                  placeholder="e.g. We've been serving Augusta since 1987, specializing in authentic Southern cuisine made from scratch daily..."
+                  value={form.description} onChange={e => setField('description', e.target.value)}
+                  style={{resize:'vertical',lineHeight:'1.65'}} />
+                <div style={{display:'flex',justifyContent:'space-between',marginTop:6}}>
+                  <span style={{fontSize:12,color:form.description.length<20?'#c62828':'#2d6a4f'}}>
+                    {form.description.length<20 ? `${20-form.description.length} more characters needed` : '✓ Good to go'}
                   </span>
-                  <span className="text-xs text-[#6b7280]">{form.description.length} / 2000</span>
+                  <span style={{fontSize:12,color:'#6b7280'}}>{form.description.length} / 2000</span>
                 </div>
               </div>
             </div>
           )}
 
-          {/* STEP 5 — Hours */}
+          {/* STEP 5 */}
           {step === 5 && (
             <div>
-              <h1 className="text-2xl font-bold text-[#1a3a2a] mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
-                What are your hours?
-              </h1>
-              <p className="text-[#6b7280] text-sm mb-8">You can update these anytime. Check "Closed" for days you're not open.</p>
-
-              <div className="bg-white border border-[#e5e0d5] rounded-12 overflow-hidden" style={{ borderRadius: '12px' }}>
-                <div className="px-5 py-4">
+              <h1 style={{...S, fontSize:'26px', fontWeight:700, color:'#1a3a2a', marginBottom:6}}>What are your hours?</h1>
+              <p style={{fontSize:14, color:'#6b7280', marginBottom:28}}>Update anytime from your dashboard.</p>
+              <div style={{background:'#fff',border:'1px solid #e5e0d5',borderRadius:12,overflow:'hidden'}}>
+                <div style={{padding:'4px 24px 16px'}}>
                   {DAYS.map(day => {
-                    const h = form.hours[day] ?? { open: '09:00', close: '17:00', closed: false }
+                    const h = form.hours[day] ?? {open:'09:00',close:'17:00',closed:false}
                     return (
-                      <div key={day} className="ob-hours-row">
-                        <span className="ob-day-label">{DAY_LABELS[day]}</span>
-                        <input
-                          type="time"
-                          className="ob-time-input"
-                          value={h.open}
-                          disabled={h.closed}
-                          onChange={e => setHours(day, 'open', e.target.value)}
-                        />
-                        <input
-                          type="time"
-                          className="ob-time-input"
-                          value={h.close}
-                          disabled={h.closed}
-                          onChange={e => setHours(day, 'close', e.target.value)}
-                        />
-                        <button
-                          type="button"
-                          className={`ob-closed-btn ${h.closed ? 'active' : ''}`}
-                          onClick={() => setHours(day, 'closed', !h.closed)}
-                        >
-                          {h.closed ? 'Closed' : 'Open'}
+                      <div key={day} className="ob-hr-row">
+                        <span style={{fontSize:13,fontWeight:600,color:'#1c1c1c'}}>{DAY_LABELS[day]}</span>
+                        <input type="time" className="ob-ti" value={h.open} disabled={h.closed} onChange={e => setHours(day,'open',e.target.value)} />
+                        <input type="time" className="ob-ti" value={h.close} disabled={h.closed} onChange={e => setHours(day,'close',e.target.value)} />
+                        <button type="button" className={`ob-hbtn ${h.closed?'closed':'open'}`} onClick={() => setHours(day,'closed',!h.closed)}>
+                          {h.closed?'Closed':'Open'}
                         </button>
                       </div>
                     )
@@ -510,103 +399,57 @@ export function OnboardingFlow({ userId, userEmail }: { userId: string; userEmai
             </div>
           )}
 
-          {/* STEP 6 — Review */}
+          {/* STEP 6 */}
           {step === 6 && (
             <div>
-              <h1 className="text-2xl font-bold text-[#1a3a2a] mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
-                Review & submit
-              </h1>
-              <p className="text-[#6b7280] text-sm mb-8">
-                Once submitted, your listing goes into our review queue. We'll approve it within 24–48 hours and notify you by email.
+              <h1 style={{...S, fontSize:'26px', fontWeight:700, color:'#1a3a2a', marginBottom:6}}>Review & submit</h1>
+              <p style={{fontSize:14, color:'#6b7280', marginBottom:28}}>
+                {isAdmin ? 'As admin, your listing goes live immediately.' : "Once submitted, we'll review it within 24–48 hours."}
               </p>
-
-              <div className="bg-white border border-[#e5e0d5] rounded-xl overflow-hidden mb-6">
-                <div className="px-6 py-4 border-b border-[#e5e0d5] flex justify-between items-center">
-                  <span className="font-semibold text-[#1a3a2a]">{form.name}</span>
-                  <button onClick={() => setStep(1)} className="text-xs text-[#2d6a4f] underline">Edit</button>
+              <div style={{background:'#fff',border:'1px solid #e5e0d5',borderRadius:12,overflow:'hidden',marginBottom:20}}>
+                <div style={{padding:'14px 24px',borderBottom:'1px solid #e5e0d5',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                  <span style={{fontWeight:700,fontSize:16,color:'#1a3a2a'}}>{form.name}</span>
+                  <button onClick={() => setStep(1)} style={{fontSize:12,color:'#2d6a4f',textDecoration:'underline',background:'none',border:'none',cursor:'pointer'}}>Edit</button>
                 </div>
-                <div className="px-6 py-2">
-                  <div className="ob-review-row">
-                    <span className="ob-review-key">Category</span>
-                    <span className="ob-review-val">{form.category ? CATEGORY_LABELS[form.category as BusinessCategory] : '—'}</span>
-                  </div>
-                  <div className="ob-review-row">
-                    <span className="ob-review-key">Location</span>
-                    <span className="ob-review-val">
-                      {form.is_mobile_service ? '📱 Mobile service — ' : ''}
-                      {[form.address, form.city, form.state, form.zip].filter(Boolean).join(', ') || '—'}
-                    </span>
-                  </div>
-                  <div className="ob-review-row">
-                    <span className="ob-review-key">Phone</span>
-                    <span className="ob-review-val">{form.phone || <span className="text-[#b0a898]">Not provided</span>}</span>
-                  </div>
-                  <div className="ob-review-row">
-                    <span className="ob-review-key">Website</span>
-                    <span className="ob-review-val">{form.website || <span className="text-[#b0a898]">Not provided</span>}</span>
-                  </div>
-                  <div className="ob-review-row">
-                    <span className="ob-review-key">Email</span>
-                    <span className="ob-review-val">{form.email || <span className="text-[#b0a898]">Not provided</span>}</span>
-                  </div>
-                  <div className="ob-review-row">
-                    <span className="ob-review-key">Description</span>
-                    <span className="ob-review-val text-left text-sm text-[#6b7280]" style={{ textAlign: 'left', maxWidth: '60%' }}>
-                      {form.description.slice(0, 120)}{form.description.length > 120 ? '…' : ''}
-                    </span>
-                  </div>
-                  <div className="ob-review-row">
-                    <span className="ob-review-key">Honor Pledge</span>
-                    <span className="ob-review-val text-[#2d6a4f] font-semibold">✓ Signed</span>
-                  </div>
+                <div style={{padding:'4px 24px 8px'}}>
+                  <div className="ob-rrow"><span className="ob-rk">Category</span><span className="ob-rv">{form.category ? CATEGORY_LABELS[form.category as BusinessCategory] : '—'}</span></div>
+                  <div className="ob-rrow"><span className="ob-rk">Service Type</span><span className="ob-rv">{form.service_type==='storefront'?'🏪 Storefront':form.service_type==='mobile_only'?'📱 Mobile Only':'🏪📱 Both'}</span></div>
+                  <div className="ob-rrow"><span className="ob-rk">Location</span><span className="ob-rv">{[form.address,form.suite,form.city,form.state,form.zip].filter(Boolean).join(', ')||`${form.city}, ${form.state}`}</span></div>
+                  <div className="ob-rrow"><span className="ob-rk">Phone</span><span className="ob-rv">{form.phone||<span style={{color:'#b0a898'}}>—</span>}</span></div>
+                  <div className="ob-rrow"><span className="ob-rk">Website</span><span className="ob-rv">{form.website||<span style={{color:'#b0a898'}}>—</span>}</span></div>
+                  <div className="ob-rrow"><span className="ob-rk">Honor Pledge</span><span className="ob-rv" style={{color:'#2d6a4f',fontWeight:700}}>✓ Signed</span></div>
                 </div>
               </div>
-
-              <div className="bg-[#d8f3dc] border border-[#b8e0c4] rounded-xl px-5 py-4 mb-6 text-sm text-[#1a3a2a]">
-                <p className="font-semibold mb-1">What happens next:</p>
-                <ul className="space-y-1 text-[#2d6a4f]">
-                  <li>→ Your listing enters our review queue (24–48 hrs)</li>
-                  <li>→ Once approved, it appears in search results immediately</li>
-                  <li>→ Upgrade to a Professional Page anytime from your dashboard</li>
-                  <li>→ Apply for Gold Shield verification when you're ready</li>
-                </ul>
-              </div>
-
-              {error && (
-                <div className="bg-[#fdecea] border border-[#f5c6c6] rounded-lg px-4 py-3 mb-4 text-sm text-[#c62828]">
-                  {error}
+              {!isAdmin && (
+                <div style={{background:'#d8f3dc',border:'1px solid #b8e0c4',borderRadius:10,padding:'16px 20px',marginBottom:20,fontSize:13,color:'#1a3a2a'}}>
+                  <p style={{fontWeight:700,marginBottom:8}}>What happens next:</p>
+                  <ul style={{paddingLeft:16,color:'#2d6a4f',lineHeight:1.8}}>
+                    <li>Your listing enters our review queue (24–48 hrs)</li>
+                    <li>Once approved, it appears in search results immediately</li>
+                    <li>Upgrade to a Professional Page anytime from your dashboard</li>
+                    <li>Apply for Gold Shield verification when you're ready</li>
+                  </ul>
                 </div>
               )}
+              {error && <div style={{background:'#fdecea',border:'1px solid #f5c6c6',borderRadius:8,padding:'12px 16px',marginBottom:16,fontSize:13,color:'#c62828'}}>{error}</div>}
             </div>
           )}
 
-          {/* Navigation */}
-          <div className="flex justify-between items-center mt-8 pt-6 border-t border-[#e5e0d5]">
-            <button
-              type="button"
-              onClick={() => setStep(s => Math.max(1, s - 1))}
-              className={`px-6 py-3 rounded-lg text-sm font-semibold border border-[#e5e0d5] text-[#6b7280] bg-white hover:border-[#2d6a4f] hover:text-[#2d6a4f] transition-colors ${step === 1 ? 'invisible' : ''}`}
-            >
+          {/* Nav */}
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:32,paddingTop:24,borderTop:'1px solid #e5e0d5'}}>
+            <button type="button" onClick={() => setStep(s => Math.max(1,s-1))}
+              style={{padding:'12px 24px',borderRadius:8,fontSize:14,fontWeight:600,border:'1px solid #d4cfc7',color:'#6b7280',background:'#fff',cursor:'pointer',visibility:step===1?'hidden':'visible'}}>
               ← Back
             </button>
-
             {step < STEPS.length ? (
-              <button
-                type="button"
-                onClick={() => { if (canAdvance()) setStep(s => s + 1) }}
-                disabled={!canAdvance()}
-                className="px-8 py-3 rounded-lg text-sm font-semibold bg-[#1a3a2a] text-white hover:bg-[#2d6a4f] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
+              <button type="button" onClick={() => { if (canAdvance()) setStep(s => s+1) }} disabled={!canAdvance()}
+                style={{padding:'12px 32px',borderRadius:8,fontSize:14,fontWeight:600,background:canAdvance()?'#1a3a2a':'#d4cfc7',color:'#fff',border:'none',cursor:canAdvance()?'pointer':'not-allowed'}}>
                 Continue →
               </button>
             ) : (
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={loading}
-                className="px-8 py-3 rounded-lg text-sm font-semibold bg-[#c9a84c] text-[#1a3a2a] hover:bg-[#dbb95a] transition-colors disabled:opacity-50"
-              >
-                {loading ? 'Submitting…' : 'Submit for Review →'}
+              <button type="button" onClick={handleSubmit} disabled={loading}
+                style={{padding:'12px 32px',borderRadius:8,fontSize:14,fontWeight:700,background:'#c9a84c',color:'#1a3a2a',border:'none',cursor:loading?'not-allowed':'pointer',opacity:loading?0.7:1}}>
+                {loading ? 'Submitting…' : isAdmin ? 'Publish Listing →' : 'Submit for Review →'}
               </button>
             )}
           </div>

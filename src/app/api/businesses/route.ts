@@ -11,12 +11,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
-  const {
-    name, category, slug, honor_pledge,
-    is_mobile_service, address, city, state, zip,
-    phone, website, email,
-    description, hours,
-  } = body
+  const { name, category, slug, honor_pledge, is_mobile_service, address, suite, city, state, zip, phone, website, email, description, hours } = body
 
   if (!name || !category || !city || !state) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -27,17 +22,19 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient()
 
+  // Check if user is admin
+  const { data: profile } = await admin.from('profiles').select('role').eq('id', user.id).single()
+  const isAdmin = profile?.role === 'admin'
+
   // Ensure slug uniqueness
   let finalSlug = slug
-  const { data: existing } = await admin
-    .from('businesses')
-    .select('id')
-    .eq('slug', finalSlug)
-    .single()
+  const { data: existing } = await admin.from('businesses').select('id').eq('slug', finalSlug).single()
+  if (existing) finalSlug = slug + '-' + Math.random().toString(36).slice(2, 6)
 
-  if (existing) {
-    finalSlug = slug + '-' + Math.random().toString(36).slice(2, 6)
-  }
+  // Admins go live immediately, everyone else is pending
+  const status = isAdmin ? 'active' : 'pending'
+  // Admins get paid features without subscription
+  const subscription_status = isAdmin ? 'active' : 'none'
 
   const { data: business, error } = await admin
     .from('businesses')
@@ -46,11 +43,12 @@ export async function POST(req: NextRequest) {
       slug: finalSlug,
       name: name.trim(),
       category,
-      status: 'pending',
-      subscription_status: 'none',
+      status,
+      subscription_status,
       honor_pledge,
       is_mobile_service: is_mobile_service ?? false,
       address: address?.trim() || null,
+      suite: suite?.trim() || null,
       city: city.trim(),
       state: state.toUpperCase(),
       zip: zip?.trim() || null,
@@ -59,7 +57,7 @@ export async function POST(req: NextRequest) {
       email: email?.trim() || null,
       description: description?.trim() || null,
       hours: hours || null,
-      profile_completion: 30,
+      profile_completion: isAdmin ? 60 : 30,
     })
     .select('id, slug')
     .single()
@@ -69,15 +67,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to create listing' }, { status: 500 })
   }
 
-  // Upgrade role to free_owner
-  await admin.from('profiles').update({ role: 'free_owner' }).eq('id', user.id)
+  // Set role
+  await admin.from('profiles').update({ role: isAdmin ? 'admin' : 'free_owner' }).eq('id', user.id)
 
-  // Send confirmation email via Resend
+  // Send email (non-blocking)
   try {
     await sendBusinessSubmitted(user.email!, name.trim())
-  } catch (emailErr) {
-    // Don't fail the request if email fails — business is already saved
-    console.error('Business submitted email error:', emailErr)
+  } catch (e) {
+    console.error('Email error:', e)
   }
 
   return NextResponse.json({ id: business.id, slug: business.slug })
