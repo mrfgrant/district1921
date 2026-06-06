@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { AdSlot } from '@/components/ads/AdSlot'
 import Link from 'next/link'
 import { CATEGORY_LABELS, BusinessCategory, BusinessHours } from '@/types'
 import { formatPhone, isBusinessOpen } from '@/lib/utils'
@@ -367,35 +368,8 @@ export function BusinessProfile({ business: biz, deals, events, isPaid }: {
             )}
 
 
-            {/* Ad block */}
-            <div style={{ background: '#faf7f0', border: '1px solid #e5e0d5', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
-              <div style={{ textAlign: 'right', padding: '5px 10px 0', fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', color: '#b0a898', textTransform: 'uppercase' }}>
-                Advertisement
-              </div>
-              <div style={{ padding: '0 14px 14px' }}>
-                <div style={{
-                  width: '100%', height: 120, borderRadius: 8, marginBottom: 10,
-                  background: 'linear-gradient(135deg, #1a3a2a, #2d6a4f)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexDirection: 'column', gap: 4,
-                }}>
-                  <span style={{ fontSize: 13, fontFamily: "\'Playfair Display\', serif", fontWeight: 700, color: '#fff', textAlign: 'center', padding: '0 12px' }}>
-                    Advertise Here
-                  </span>
-                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>
-                    Reach community members
-                  </span>
-                </div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#1c1c1c', marginBottom: 4 }}>Put Your Business Here</div>
-                <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 10, lineHeight: 1.5 }}>
-                  Ad slots starting at $49/mo. Geo-targeted to this city.
-                </div>
-                <Link href="/#register"
-                  style={{ display: 'block', background: '#c9a84c', color: '#1a3a2a', textAlign: 'center', padding: '8px', borderRadius: 6, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
-                  Get Ad Info →
-                </Link>
-              </div>
-            </div>
+            {/* Ad slot — serves paid ads or house ad fallback */}
+            <AdSlot placement="sidebar" city={biz.city} state={biz.state} />
 
             {/* Recommend card */}
             <div style={{ background: '#fff', border: '1px solid #e5e0d5', borderRadius: 12, padding: 20, marginBottom: 16, textAlign: 'center' }}>

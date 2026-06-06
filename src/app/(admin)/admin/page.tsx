@@ -8,6 +8,7 @@ export default async function AdminPage() {
 
   const [
     { count: pending },
+    { count: pendingAds },
     { count: active },
     { count: suspended },
     { count: users },
@@ -20,6 +21,7 @@ export default async function AdminPage() {
     supabase.from('profiles').select('*', { count: 'exact', head: true }),
     supabase.from('shield_applications').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('reports').select('*', { count: 'exact', head: true }).eq('resolved', false),
+    supabase.from('ads').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
   ])
 
   const stats = [
@@ -29,6 +31,7 @@ export default async function AdminPage() {
     { label: 'Shield Queue', value: shieldPending ?? 0, href: '/admin/shield-queue', urgent: (shieldPending ?? 0) > 0, color: '#c9a84c' },
     { label: 'Open Reports', value: reports ?? 0, href: '/admin/reports', urgent: (reports ?? 0) > 0, color: '#c62828' },
     { label: 'Total Users', value: users ?? 0, href: '/admin/users', urgent: false, color: '#1a3a2a' },
+    { label: 'Pending Ads', value: pendingAds ?? 0, href: '/admin/ads', urgent: (pendingAds ?? 0) > 0, color: '#c9a84c' },
   ]
 
   return (

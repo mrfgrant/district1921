@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { AdSlot } from '@/components/ads/AdSlot'
 import { BusinessMap } from '@/components/map/BusinessMap'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -448,6 +449,13 @@ export function SearchPage() {
             <div>
               {results.map(biz => <BusinessCard key={biz.id} biz={biz} />)}
             </div>
+
+            {/* Search banner ad — shows after first 4 results */}
+            {results.length >= 4 && (
+              <div style={{ margin: '8px 0' }}>
+                <AdSlot placement="search_banner" city={city} state={state} />
+              </div>
+            )}
 
             {/* Load more */}
             {results.length < count && (
