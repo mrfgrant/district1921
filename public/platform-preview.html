@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>District 1921 — Platform Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green-deep: #1a3a2a;
+    --green-mid: #2d6a4f;
+    --green-light: #40916c;
+    --green-pale: #d8f3dc;
+    --gold: #c9a84c;
+    --gold-light: #f5e6c0;
+    --cream: #faf7f0;
+    --ink: #1c1c1c;
+    --muted: #6b7280;
+    --border: #e5e0d5;
+    --white: #ffffff;
+    --red-badge: #c0392b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); }
+
+  /* ── PREVIEW BANNER ── */
+  .preview-banner {
+    background: var(--gold);
+    color: var(--green-deep);
+    text-align: center;
+    padding: 10px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+  }
+  .preview-banner a {
+    color: var(--green-deep);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    margin-left: 16px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--green-deep);
+    padding: 0 24px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 40px;
+    z-index: 100;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.25);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-icon {
+    width: 34px; height: 34px;
+    background: var(--gold); border-radius: 7px;
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+  .logo-text { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 900; color: var(--white); }
+  .logo-text span { color: var(--gold); }
+  nav { display: flex; align-items: center; gap: 24px; }
+  nav a { color: rgba(255,255,255,0.75); text-decoration: none; font-size: 13px; font-weight: 500; }
+  nav a:hover { color: var(--gold); }
+  .nav-cta {
+    background: var(--gold); color: var(--green-deep) !important;
+    padding: 8px 16px; border-radius: 6px; font-weight: 600 !important;
+  }
+
+  /* ── HERO SEARCH ── */
+  .hero {
+    background: linear-gradient(135deg, var(--green-deep) 0%, var(--green-mid) 60%, #1a4a35 100%);
+    padding: 48px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 50%, rgba(201,168,76,0.08) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(64,145,108,0.12) 0%, transparent 40%);
+  }
+  .hero-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; letter-spacing: 3px;
+    color: var(--gold); text-transform: uppercase;
+    margin-bottom: 12px; position: relative;
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 42px; font-weight: 900;
+    color: var(--white); line-height: 1.1;
+    margin-bottom: 8px; position: relative;
+  }
+  .hero p { color: rgba(255,255,255,0.65); font-size: 15px; margin-bottom: 28px; position: relative; }
+  .search-bar {
+    display: flex; max-width: 680px; margin: 0 auto 20px;
+    background: var(--white); border-radius: 12px;
+    overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.25); position: relative;
+  }
+  .search-field {
+    flex: 1; display: flex; align-items: center;
+    padding: 0 16px; gap: 8px; border-right: 1px solid var(--border);
+  }
+  .search-field input {
+    flex: 1; border: none; outline: none;
+    font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--ink);
+    background: transparent; padding: 16px 0;
+  }
+  .search-field input::placeholder { color: var(--muted); }
+  .search-icon { color: var(--muted); font-size: 16px; }
+  .location-field {
+    display: flex; align-items: center;
+    padding: 0 16px; gap: 8px; min-width: 180px;
+  }
+  .location-field input {
+    border: none; outline: none;
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    color: var(--ink); background: transparent;
+    padding: 16px 0; width: 130px;
+  }
+  .search-btn {
+    background: var(--gold); border: none;
+    padding: 0 28px; font-family: 'DM Sans', sans-serif;
+    font-weight: 600; font-size: 14px;
+    color: var(--green-deep); cursor: pointer;
+  }
+  .category-pills {
+    display: flex; gap: 8px; justify-content: center;
+    flex-wrap: wrap; position: relative;
+  }
+  .pill {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.85);
+    padding: 6px 14px; border-radius: 20px;
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .pill.active { background: var(--gold); border-color: var(--gold); color: var(--green-deep); }
+
+  /* ── MAIN LAYOUT ── */
+  .main-layout {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 0; max-width: 1280px;
+    margin: 0 auto; padding: 24px 16px;
+    align-items: start;
+  }
+  .content-area { padding-right: 24px; }
+
+  /* ── VIEW TOGGLE ── */
+  .view-toggle {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 16px;
+  }
+  .result-count { font-size: 13px; color: var(--muted); }
+  .result-count strong { color: var(--ink); }
+  .toggle-btns {
+    display: flex; background: var(--white);
+    border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+  }
+  .toggle-btn {
+    padding: 7px 14px; font-size: 12px; font-weight: 500;
+    border: none; background: transparent; cursor: pointer;
+    color: var(--muted); display: flex; align-items: center; gap: 5px;
+  }
+  .toggle-btn.active { background: var(--green-deep); color: var(--white); }
+
+  /* ── MAP ── */
+  .map-container {
+    background: #e8f4eb; border-radius: 14px;
+    height: 260px; margin-bottom: 20px;
+    position: relative; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .map-bg {
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(rgba(200,230,210,0.5) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,230,210,0.5) 1px, transparent 1px);
+    background-size: 30px 30px;
+  }
+  .map-pins { position: absolute; inset: 0; }
+  .map-pin {
+    position: absolute; display: flex;
+    flex-direction: column; align-items: center; cursor: pointer;
+  }
+  .pin-dot {
+    width: 28px; height: 28px;
+    border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .pin-dot.green { background: var(--green-mid); }
+  .pin-dot.gold { background: var(--gold); }
+  .pin-dot.red { background: var(--red-badge); }
+  .pin-label {
+    background: var(--white); padding: 3px 7px; border-radius: 4px;
+    font-size: 10px; font-weight: 600; color: var(--ink);
+    white-space: nowrap; box-shadow: 0 1px 4px rgba(0,0,0,0.15); margin-top: 4px;
+  }
+  .map-legend {
+    position: absolute; bottom: 12px; left: 12px;
+    background: var(--white); border-radius: 8px; padding: 8px 12px;
+    display: flex; gap: 12px; font-size: 11px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; color: var(--muted); font-weight: 500; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .map-controls {
+    position: absolute; top: 12px; right: 12px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .map-ctrl-btn {
+    width: 32px; height: 32px; background: var(--white);
+    border: 1px solid var(--border); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  }
+
+  /* ── FILTERS ── */
+  .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; }
+  .filter-chip {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: 500;
+    color: var(--muted); cursor: pointer; white-space: nowrap;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .filter-chip.active { background: var(--green-deep); border-color: var(--green-deep); color: var(--white); }
+
+  /* ── LISTING CARDS ── */
+  .listings { display: flex; flex-direction: column; gap: 14px; }
+  .listing-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px;
+    display: grid; grid-template-columns: 64px 1fr auto;
+    gap: 16px; align-items: start;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    cursor: pointer; position: relative;
+  }
+  .listing-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.08); border-color: var(--green-light); }
+  .listing-card.premium {
+    border-color: var(--gold);
+    background: linear-gradient(135deg, #fffdf5 0%, var(--white) 100%);
+  }
+  .premium-badge {
+    position: absolute; top: -1px; right: 20px;
+    background: var(--gold); color: var(--green-deep);
+    font-size: 10px; font-weight: 700;
+    padding: 3px 10px; border-radius: 0 0 6px 6px;
+    letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .biz-logo {
+    width: 64px; height: 64px; border-radius: 10px;
+    background: var(--green-pale);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 700; color: var(--green-mid);
+    font-family: 'Playfair Display', serif; flex-shrink: 0;
+  }
+  .biz-info { min-width: 0; }
+  .biz-name {
+    font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700;
+    color: var(--ink); margin-bottom: 3px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .gold-shield {
+    display: inline-flex; align-items: center; gap: 3px;
+    background: var(--gold); color: var(--green-deep);
+    font-size: 9px; font-weight: 700; letter-spacing: 0.05em;
+    padding: 2px 7px; border-radius: 4px; font-family: 'DM Mono', monospace;
+    text-transform: uppercase; flex-shrink: 0;
+  }
+  .biz-category { font-size: 11px; color: var(--green-mid); font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 5px; }
+  .biz-meta { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--muted); margin-bottom: 6px; flex-wrap: wrap; }
+  .stars { color: var(--gold); font-size: 12px; letter-spacing: 1px; }
+  .dot-sep { color: #ccc; }
+  .biz-desc { font-size: 13px; color: var(--muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .listing-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; min-width: 80px; }
+  .action-btn {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 600; padding: 5px 10px; border-radius: 6px;
+    border: 1px solid var(--border); cursor: pointer;
+    background: var(--white); color: var(--muted); white-space: nowrap;
+  }
+  .action-btn.share { color: var(--green-mid); border-color: var(--green-mid); }
+  .action-btn.save { color: var(--muted); }
+  .open-status { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 4px; }
+  .open-status.open { background: #e8f5e9; color: #2e7d32; }
+  .open-status.closed { background: #fdecea; color: #c62828; }
+  .mobile-badge {
+    font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px;
+    background: #e8f0fe; color: #3c4ec4;
+  }
+
+  /* ── RIGHT COLUMN ── */
+  .ad-column { position: sticky; top: 120px; display: flex; flex-direction: column; gap: 16px; }
+  .promote-box {
+    background: linear-gradient(135deg, var(--green-deep), var(--green-mid));
+    border-radius: 12px; padding: 20px; color: var(--white); text-align: center;
+  }
+  .promote-box h4 { font-family: 'Playfair Display', serif; font-size: 16px; margin-bottom: 6px; }
+  .promote-box p { font-size: 12px; opacity: 0.75; margin-bottom: 14px; line-height: 1.5; }
+  .promote-box .cta {
+    background: var(--gold); color: var(--green-deep);
+    padding: 10px 16px; border-radius: 6px; font-size: 12px;
+    font-weight: 700; display: block; cursor: pointer;
+  }
+  .ad-unit { background: var(--white); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .ad-label { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; text-align: right; padding: 6px 10px 0; }
+  .ad-card { padding: 14px; }
+  .ad-image {
+    width: 100%; height: 110px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--green-mid), var(--green-deep));
+    display: flex; align-items: center; justify-content: center;
+    color: var(--white); font-family: 'Playfair Display', serif;
+    font-size: 14px; font-weight: 700; margin-bottom: 10px;
+    text-align: center; padding: 12px;
+  }
+  .ad-title { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .ad-sub { font-size: 11px; color: var(--muted); margin-bottom: 10px; line-height: 1.4; }
+  .ad-cta {
+    display: block; background: var(--green-deep); color: var(--white);
+    text-align: center; padding: 8px; border-radius: 6px;
+    font-size: 12px; font-weight: 600; text-decoration: none; cursor: pointer;
+  }
+
+  /* ── SECTION DIVIDER ── */
+  .section-divider {
+    background: var(--green-deep);
+    padding: 32px 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 16px; margin-top: 16px;
+  }
+  .section-divider h2 { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 900; color: var(--white); }
+  .section-divider p { font-size: 13px; color: rgba(255,255,255,0.6); margin-top: 4px; }
+  .section-divider .tag {
+    background: var(--gold); color: var(--green-deep);
+    padding: 6px 14px; border-radius: 6px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+
+  /* ── BUSINESS PROFILE PAGE ── */
+  .biz-profile { max-width: 1280px; margin: 0 auto; padding: 0 16px 64px; }
+
+  /* Cover + logo */
+  .biz-cover {
+    height: 240px; position: relative;
+    background: linear-gradient(135deg, #1a3a2a 0%, #2d6a4f 60%, #40916c 100%);
+    border-radius: 0 0 16px 16px; overflow: hidden; margin-bottom: 0;
+  }
+  .biz-cover-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.35) 100%);
+  }
+  .biz-cover-content {
+    position: absolute; bottom: 24px; left: 24px; right: 24px;
+    display: flex; align-items: flex-end; gap: 20px;
+  }
+  .biz-cover-logo {
+    width: 88px; height: 88px; border-radius: 14px;
+    background: var(--white); border: 3px solid var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif; font-size: 36px;
+    font-weight: 700; color: var(--green-mid); flex-shrink: 0;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
+  .biz-cover-info { flex: 1; }
+  .biz-cover-name {
+    font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 900;
+    color: var(--white); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .biz-cover-cat { font-size: 13px; color: rgba(255,255,255,0.75); margin-top: 4px; }
+
+  /* Profile body */
+  .biz-body {
+    display: grid; grid-template-columns: 1fr 300px;
+    gap: 32px; margin-top: 32px;
+  }
+  .biz-main {}
+  .biz-sidebar {}
+
+  /* Stats bar */
+  .biz-stats {
+    display: flex; gap: 0;
+    border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden; margin-bottom: 28px; background: var(--white);
+  }
+  .biz-stat {
+    flex: 1; padding: 16px; text-align: center;
+    border-right: 1px solid var(--border);
+  }
+  .biz-stat:last-child { border-right: none; }
+  .biz-stat-num {
+    font-family: 'Playfair Display', serif; font-size: 24px;
+    font-weight: 900; color: var(--green-deep); line-height: 1; margin-bottom: 4px;
+  }
+  .biz-stat-label { font-size: 11px; color: var(--muted); letter-spacing: 0.05em; }
+
+  /* About */
+  .biz-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px; margin-bottom: 20px;
+  }
+  .biz-card h3 {
+    font-family: 'Playfair Display', serif; font-size: 18px;
+    font-weight: 700; color: var(--ink); margin-bottom: 14px;
+    padding-bottom: 14px; border-bottom: 1px solid var(--border);
+  }
+  .biz-about { font-size: 14px; line-height: 1.75; color: var(--muted); }
+  .biz-about strong { color: var(--ink); }
+
+  /* Photos */
+  .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .photo-thumb {
+    aspect-ratio: 1; border-radius: 8px; overflow: hidden;
+    background: var(--green-pale);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; cursor: pointer; transition: opacity 0.2s;
+  }
+  .photo-thumb:hover { opacity: 0.85; }
+  .photo-thumb.large { grid-column: span 2; aspect-ratio: 2/1; }
+
+  /* Hours */
+  .hours-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+  }
+  .hours-row:last-child { border-bottom: none; }
+  .hours-day { color: var(--ink); font-weight: 500; }
+  .hours-time { color: var(--muted); }
+  .hours-row.today { background: var(--green-pale); margin: 0 -24px; padding: 8px 24px; }
+  .hours-row.today .hours-day { color: var(--green-deep); font-weight: 700; }
+  .hours-row.today .hours-time { color: var(--green-mid); font-weight: 600; }
+
+  /* Deals badge */
+  .deals-row { display: flex; flex-direction: column; gap: 10px; }
+  .deal-item {
+    border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .deal-icon { font-size: 22px; flex-shrink: 0; }
+  .deal-title { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+  .deal-sub { font-size: 12px; color: var(--muted); }
+  .deal-badge {
+    margin-left: auto; background: var(--gold-light); color: #7a5c00;
+    font-size: 11px; font-weight: 700; padding: 4px 10px;
+    border-radius: 6px; white-space: nowrap; flex-shrink: 0;
+  }
+
+  /* Sidebar */
+  .contact-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px; margin-bottom: 16px;
+  }
+  .contact-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+  }
+  .contact-row:last-child { border-bottom: none; }
+  .contact-icon { font-size: 16px; flex-shrink: 0; width: 20px; text-align: center; }
+  .contact-label { color: var(--ink); font-weight: 500; }
+  .contact-value { color: var(--green-mid); margin-left: auto; font-size: 12px; text-decoration: none; }
+
+  .shield-card {
+    background: var(--green-deep); border-radius: 12px;
+    padding: 20px; text-align: center; margin-bottom: 16px;
+  }
+  .shield-icon { font-size: 36px; margin-bottom: 8px; }
+  .shield-title {
+    font-family: 'Playfair Display', serif; font-size: 16px;
+    font-weight: 700; color: var(--gold); margin-bottom: 6px;
+  }
+  .shield-desc { font-size: 12px; color: rgba(255,255,255,0.65); line-height: 1.5; margin-bottom: 14px; }
+  .shield-checks { list-style: none; text-align: left; }
+  .shield-checks li {
+    font-size: 12px; color: rgba(255,255,255,0.75);
+    padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .shield-checks li:last-child { border-bottom: none; }
+  .shield-checks li::before { content: '✓'; color: var(--gold); font-weight: 700; flex-shrink: 0; }
+
+  .cta-card {
+    background: var(--gold-light); border: 1px solid #e8d090;
+    border-radius: 12px; padding: 20px; text-align: center;
+  }
+  .cta-card h4 { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+  .cta-card p { font-size: 12px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
+  .cta-card .btn {
+    display: block; background: var(--green-deep); color: var(--white);
+    padding: 11px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    text-decoration: none; cursor: pointer; margin-bottom: 8px;
+  }
+  .cta-card .btn-sec {
+    display: block; background: transparent; color: var(--green-deep);
+    padding: 9px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    text-decoration: none; cursor: pointer; border: 1px solid var(--border);
+  }
+
+  /* checkin bar */
+  .checkin-bar {
+    background: var(--green-pale); border: 1px solid #b8e0c4;
+    border-radius: 8px; padding: 12px 16px; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px; font-size: 13px;
+    color: var(--green-deep);
+  }
+  .checkin-bar strong { font-weight: 700; }
+  .checkin-btn {
+    margin-left: auto; background: var(--green-deep); color: var(--white);
+    border: none; padding: 7px 14px; border-radius: 6px;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+
+  /* street view */
+  .street-view-box {
+    background: #dce8dc; border-radius: 12px; height: 140px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 16px; border: 1px solid var(--border);
+    position: relative; overflow: hidden; cursor: pointer;
+  }
+  .street-view-box::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, #c8d8c8, #dce8dc);
+  }
+  .street-view-label {
+    position: relative; text-align: center;
+    font-size: 13px; color: var(--green-deep); font-weight: 600;
+  }
+
+  @media (max-width: 860px) {
+    .main-layout { grid-template-columns: 1fr; }
+    .ad-column { display: none; }
+    .biz-body { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- PREVIEW BANNER -->
+<div class="preview-banner">
+  🔎 This is a design preview of District 1921 — not yet live. &nbsp;
+  <a href="/">← Back to district1921.com</a>
+</div>
+
+<!-- HEADER -->
+<header>
+  <a class="logo" href="/">
+    <div class="logo-icon">🏛</div>
+    <div class="logo-text">District <span>1921</span></div>
+  </a>
+  <nav>
+    <a href="#">Browse</a>
+    <a href="#">Map View</a>
+    <a href="#">Add a Business</a>
+    <a href="/" class="nav-cta">Pre-Register →</a>
+  </nav>
+</header>
+
+<!-- HERO SEARCH -->
+<div class="hero">
+  <div class="hero-label">The Community Business Directory</div>
+  <h1>Find. Support. Share.</h1>
+  <p>Discover community businesses — added by owners and members alike.</p>
+  <div class="search-bar">
+    <div class="search-field">
+      <span class="search-icon">🔍</span>
+      <input type="text" value="Soul food restaurants" placeholder="Business, category, or keyword...">
+    </div>
+    <div class="location-field">
+      <span class="search-icon">📍</span>
+      <input type="text" value="Augusta, GA">
+    </div>
+    <button class="search-btn">Search</button>
+  </div>
+  <div class="category-pills">
+    <div class="pill active">🍽 Food & Dining</div>
+    <div class="pill">💇 Beauty & Wellness</div>
+    <div class="pill">⚖️ Legal & Finance</div>
+    <div class="pill">🏗 Contractors</div>
+    <div class="pill">🩺 Healthcare</div>
+    <div class="pill">✂️ Barbershop</div>
+    <div class="pill">🛒 Retail</div>
+  </div>
+</div>
+
+<!-- SEARCH RESULTS -->
+<div class="main-layout">
+  <div class="content-area">
+
+    <div class="view-toggle">
+      <div class="result-count">Showing <strong>247 businesses</strong> near Augusta, GA</div>
+      <div class="toggle-btns">
+        <button class="toggle-btn active">🗺 Map</button>
+        <button class="toggle-btn">☰ List</button>
+        <button class="toggle-btn">⊞ Grid</button>
+      </div>
+    </div>
+
+    <!-- MAP -->
+    <div class="map-container">
+      <div class="map-bg"></div>
+      <div class="map-pins">
+        <div class="map-pin" style="top:28%;left:34%">
+          <div class="pin-dot gold"></div>
+          <div class="pin-label">Mama's Kitchen ★4.9</div>
+        </div>
+        <div class="map-pin" style="top:48%;left:54%">
+          <div class="pin-dot green"></div>
+          <div class="pin-label">JSG Barbershop</div>
+        </div>
+        <div class="map-pin" style="top:62%;left:24%">
+          <div class="pin-dot green"></div>
+          <div class="pin-label">Grant Legal Group</div>
+        </div>
+        <div class="map-pin" style="top:22%;left:64%">
+          <div class="pin-dot red"></div>
+          <div class="pin-label">Sponsored</div>
+        </div>
+        <div class="map-pin" style="top:68%;left:70%">
+          <div class="pin-dot green"></div>
+          <div class="pin-label">Cloud Nine Salon</div>
+        </div>
+        <div class="map-pin" style="top:40%;left:76%">
+          <div class="pin-dot green"></div>
+          <div class="pin-label">Apex Auto</div>
+        </div>
+      </div>
+      <div class="map-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div> Pro Page</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--green-mid)"></div> Listed</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--red-badge)"></div> Sponsored</div>
+      </div>
+      <div class="map-controls">
+        <div class="map-ctrl-btn">＋</div>
+        <div class="map-ctrl-btn">－</div>
+        <div class="map-ctrl-btn">◎</div>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filter-bar">
+      <div class="filter-chip active">All</div>
+      <div class="filter-chip">⭐ 4.5+</div>
+      <div class="filter-chip">🟢 Open Now</div>
+      <div class="filter-chip">🛡 Gold Shield</div>
+      <div class="filter-chip">📸 Has Photos</div>
+      <div class="filter-chip">📱 Mobile Service</div>
+      <div class="filter-chip">🏅 Community Pick</div>
+    </div>
+
+    <!-- LISTINGS -->
+    <div class="listings">
+
+      <!-- PREMIUM — Gold Shield -->
+      <div class="listing-card premium">
+        <div class="premium-badge">★ Featured</div>
+        <div class="biz-logo">M</div>
+        <div class="biz-info">
+          <div class="biz-name">
+            Mama's Southern Kitchen
+            <span class="gold-shield">🛡 Gold Shield</span>
+          </div>
+          <div class="biz-category">🍽 Soul Food · Restaurant</div>
+          <div class="biz-meta">
+            <span class="stars">★★★★★</span>
+            <span>4.9</span>
+            <span class="dot-sep">·</span>
+            <span>312 community ratings</span>
+            <span class="dot-sep">·</span>
+            <span>0.8 mi</span>
+            <span class="dot-sep">·</span>
+            <span class="open-status open">Open Now</span>
+          </div>
+          <div class="biz-desc">Authentic Southern cuisine with family recipes passed down four generations. Catering available for events up to 500 guests. Daily specials and Sunday buffet 11am–3pm.</div>
+        </div>
+        <div class="listing-actions">
+          <button class="action-btn share">↗ Share</button>
+          <button class="action-btn save">♡ Save</button>
+        </div>
+      </div>
+
+      <!-- STANDARD CARD -->
+      <div class="listing-card">
+        <div class="biz-logo" style="background:#f0e8ff;color:#6b21a8;">J</div>
+        <div class="biz-info">
+          <div class="biz-name">JSG Barbershop & Grooming</div>
+          <div class="biz-category">✂️ Barbershop · Grooming</div>
+          <div class="biz-meta">
+            <span class="stars">★★★★☆</span>
+            <span>4.3</span>
+            <span class="dot-sep">·</span>
+            <span>89 ratings</span>
+            <span class="dot-sep">·</span>
+            <span>1.4 mi</span>
+            <span class="dot-sep">·</span>
+            <span class="open-status open">Open Now</span>
+          </div>
+          <div class="biz-desc">Classic cuts and modern fades. Walk-ins welcome. Book online for priority service. Senior discounts available.</div>
+        </div>
+        <div class="listing-actions">
+          <button class="action-btn share">↗ Share</button>
+          <button class="action-btn save">♡ Save</button>
+        </div>
+      </div>
+
+      <!-- MOBILE SERVICE -->
+      <div class="listing-card">
+        <div class="biz-logo" style="background:#fef3c7;color:#d97706;">C</div>
+        <div class="biz-info">
+          <div class="biz-name">
+            Cloud Nine Braiding Studio
+            <span class="gold-shield">🛡 Gold Shield</span>
+          </div>
+          <div class="biz-category">💇 Beauty · Natural Hair</div>
+          <div class="biz-meta">
+            <span class="stars">★★★★★</span>
+            <span>5.0</span>
+            <span class="dot-sep">·</span>
+            <span>156 ratings</span>
+            <span class="dot-sep">·</span>
+            <span class="mobile-badge">📱 Mobile Service</span>
+            <span class="dot-sep">·</span>
+            <span class="open-status open">Open Now</span>
+          </div>
+          <div class="biz-desc">Specializing in knotless braids, locs, and protective styles. Mobile appointments available across Augusta. Book 48 hrs in advance.</div>
+        </div>
+        <div class="listing-actions">
+          <button class="action-btn share">↗ Share</button>
+          <button class="action-btn save">♡ Save</button>
+        </div>
+      </div>
+
+      <!-- FREE LISTING -->
+      <div class="listing-card">
+        <div class="biz-logo" style="background:#fff0f0;color:#be123c;">G</div>
+        <div class="biz-info">
+          <div class="biz-name">Grant Legal Group</div>
+          <div class="biz-category">⚖️ Legal Services · Attorney</div>
+          <div class="biz-meta">
+            <span class="stars">★★★★★</span>
+            <span>4.8</span>
+            <span class="dot-sep">·</span>
+            <span>47 ratings</span>
+            <span class="dot-sep">·</span>
+            <span>2.1 mi</span>
+            <span class="dot-sep">·</span>
+            <span class="open-status closed">Closed</span>
+          </div>
+          <div class="biz-desc">Veteran-owned practice specializing in civil rights, personal injury, and VA disability claims.</div>
+        </div>
+        <div class="listing-actions">
+          <button class="action-btn share">↗ Share</button>
+          <button class="action-btn save">♡ Save</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN -->
+  <div class="ad-column">
+    <div class="promote-box">
+      <h4>Own This Business?</h4>
+      <p>Claim your page free. Upgrade to a Professional Page for $15/mo — full profile, analytics, and leads.</p>
+      <div class="cta">Claim Your Page →</div>
+    </div>
+    <div class="ad-unit">
+      <div class="ad-label">Advertisement</div>
+      <div class="ad-card">
+        <div class="ad-image">Augusta Community<br>Credit Union<br><small style="opacity:0.7;font-family:'DM Sans',sans-serif;font-size:11px">Est. 1966</small></div>
+        <div class="ad-title">Banking That Works For You</div>
+        <div class="ad-sub">Low-rate loans, free checking, community reinvestment.</div>
+        <div class="ad-cta">Learn More</div>
+      </div>
+    </div>
+    <div class="ad-unit">
+      <div class="ad-label">Sponsored Listing</div>
+      <div class="ad-card">
+        <div class="ad-image" style="background:linear-gradient(135deg,#8b5e3c,#5c3d1e);">Roots & Culture<br><small style="opacity:0.7;font-family:'DM Sans',sans-serif;font-size:11px">Afrocentric Bookstore & Café</small></div>
+        <div class="ad-title">Roots & Culture Bookstore</div>
+        <div class="ad-sub">Author events every weekend. 2,000+ titles. Coffee bar daily.</div>
+        <div class="ad-cta">View Full Page</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DIVIDER: BUSINESS PROFILE -->
+<div class="section-divider">
+  <div>
+    <h2>Business Profile Page</h2>
+    <p>This is what a Professional Page looks like — with full profile, photos, hours, and Gold Shield verification.</p>
+  </div>
+  <div class="tag">Pro Page · $15/mo</div>
+</div>
+
+<!-- BUSINESS PROFILE -->
+<div class="biz-profile">
+
+  <!-- Cover photo -->
+  <div class="biz-cover">
+    <div class="biz-cover-overlay"></div>
+    <div style="position:absolute;inset:0;background:url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\"><defs><pattern id=\"g\" x=\"0\" y=\"0\" width=\"40\" height=\"40\" patternUnits=\"userSpaceOnUse\"><path d=\"M0 20h40M20 0v40\" stroke=\"rgba(255,255,255,0.04)\" stroke-width=\"1\"/></pattern></defs><rect width=\"100%\" height=\"100%\" fill=\"url(%23g)\"/></svg>');"></div>
+    <div class="biz-cover-content">
+      <div class="biz-cover-logo">M</div>
+      <div class="biz-cover-info">
+        <div class="biz-cover-name">
+          Mama's Southern Kitchen
+          <span class="gold-shield" style="font-size:11px;padding:4px 10px;">🛡 Gold Shield Verified</span>
+        </div>
+        <div class="biz-cover-cat">🍽 Soul Food · Restaurant &nbsp;·&nbsp; Augusta, GA</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="biz-body">
+    <div class="biz-main">
+
+      <!-- Check-in bar -->
+      <div class="checkin-bar">
+        👥 <span><strong>1,247</strong> community members have visited</span>
+        <button class="checkin-btn">Check In</button>
+      </div>
+
+      <!-- Stats -->
+      <div class="biz-stats">
+        <div class="biz-stat">
+          <div class="biz-stat-num">4.9</div>
+          <div class="biz-stat-label">Community Rating</div>
+        </div>
+        <div class="biz-stat">
+          <div class="biz-stat-num">312</div>
+          <div class="biz-stat-label">Ratings</div>
+        </div>
+        <div class="biz-stat">
+          <div class="biz-stat-num">1.2k</div>
+          <div class="biz-stat-label">Followers</div>
+        </div>
+        <div class="biz-stat">
+          <div class="biz-stat-num">847</div>
+          <div class="biz-stat-label">Shares</div>
+        </div>
+      </div>
+
+      <!-- About -->
+      <div class="biz-card">
+        <h3>About</h3>
+        <p class="biz-about">
+          Mama's Southern Kitchen has been feeding Augusta since 1987. Founded by Dorothy "Mama" Williams, our family recipes have been passed down through four generations — from her grandmother's kitchen in Eatonton, Georgia to our dining room today.
+          <br><br>
+          We specialize in <strong>authentic soul food</strong> prepared daily from scratch: fried chicken, catfish, oxtails, collard greens, cornbread, and our famous Sunday buffet. Catering available for events up to 500 guests.
+        </p>
+      </div>
+
+      <!-- Photos -->
+      <div class="biz-card">
+        <h3>Photos</h3>
+        <div class="photo-grid">
+          <div class="photo-thumb large" style="background:linear-gradient(135deg,#8b5e3c,#c49a6c);font-size:40px;">🍗</div>
+          <div class="photo-thumb" style="background:linear-gradient(135deg,#5c3d1e,#8b5e3c);font-size:28px;">🥘</div>
+          <div class="photo-thumb" style="background:linear-gradient(135deg,#2d6a4f,#40916c);font-size:28px;">🥗</div>
+          <div class="photo-thumb" style="background:linear-gradient(135deg,#1a3a2a,#2d6a4f);font-size:28px;">🍞</div>
+          <div class="photo-thumb" style="background:linear-gradient(135deg,#7a5c2a,#c9a84c);font-size:28px;">🥧</div>
+        </div>
+      </div>
+
+      <!-- Active Deals -->
+      <div class="biz-card">
+        <h3>Active Deals</h3>
+        <div class="deals-row">
+          <div class="deal-item">
+            <div class="deal-icon">🍗</div>
+            <div>
+              <div class="deal-title">Sunday Buffet Special</div>
+              <div class="deal-sub">All-you-can-eat buffet · Sundays 11am–3pm</div>
+            </div>
+            <div class="deal-badge">$18.99</div>
+          </div>
+          <div class="deal-item">
+            <div class="deal-icon">👴</div>
+            <div>
+              <div class="deal-title">Senior Discount</div>
+              <div class="deal-sub">20% off for guests 60+ · Valid anytime</div>
+            </div>
+            <div class="deal-badge">20% OFF</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hours -->
+      <div class="biz-card">
+        <h3>Hours</h3>
+        <div class="hours-row today"><span class="hours-day">Friday (Today)</span><span class="hours-time">11:00am – 9:00pm · Open now</span></div>
+        <div class="hours-row"><span class="hours-day">Saturday</span><span class="hours-time">11:00am – 9:00pm</span></div>
+        <div class="hours-row"><span class="hours-day">Sunday</span><span class="hours-time">11:00am – 7:00pm</span></div>
+        <div class="hours-row"><span class="hours-day">Monday</span><span class="hours-time">Closed</span></div>
+        <div class="hours-row"><span class="hours-day">Tuesday – Thursday</span><span class="hours-time">11:00am – 8:00pm</span></div>
+      </div>
+
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="biz-sidebar">
+
+      <!-- Contact -->
+      <div class="contact-card">
+        <div class="contact-row">
+          <span class="contact-icon">📞</span>
+          <span class="contact-label">(706) 555-0182</span>
+          <a href="#" class="contact-value">Call →</a>
+        </div>
+        <div class="contact-row">
+          <span class="contact-icon">🌐</span>
+          <span class="contact-label">mamassouthernkitchen.com</span>
+          <a href="#" class="contact-value">Visit →</a>
+        </div>
+        <div class="contact-row">
+          <span class="contact-icon">📍</span>
+          <span class="contact-label">1842 Broad St, Augusta, GA</span>
+          <a href="#" class="contact-value">Directions →</a>
+        </div>
+        <div class="contact-row">
+          <span class="contact-icon">✉️</span>
+          <span class="contact-label">info@mamassouthern.com</span>
+          <a href="#" class="contact-value">Email →</a>
+        </div>
+      </div>
+
+      <!-- Street View -->
+      <div class="street-view-box">
+        <div class="street-view-label">🗺 Street View<br><span style="font-size:11px;font-weight:400;color:var(--green-mid);">1842 Broad St, Augusta</span></div>
+      </div>
+
+      <!-- Gold Shield -->
+      <div class="shield-card">
+        <div class="shield-icon">🛡</div>
+        <div class="shield-title">Gold Shield Verified</div>
+        <div class="shield-desc">This business has passed all four verification checks — confirming it is community-owned and operated.</div>
+        <ul class="shield-checks">
+          <li>Secretary of State registration confirmed</li>
+          <li>Business phone verified</li>
+          <li>Website reachable and active</li>
+          <li>Owner proof photo reviewed</li>
+        </ul>
+      </div>
+
+      <!-- CTA -->
+      <div class="cta-card">
+        <h4>Is this your business?</h4>
+        <p>Claim your free listing or upgrade to a Professional Page to unlock photos, hours, deals, analytics, and community leads.</p>
+        <a href="/" class="btn">Claim This Page</a>
+        <a href="/" class="btn-sec">Pre-Register for Launch</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
