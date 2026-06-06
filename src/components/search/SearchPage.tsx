@@ -111,6 +111,9 @@ function BusinessCard({ biz }: { biz: Business }) {
             )}
             <span>{biz.city}, {biz.state}</span>
             {biz.is_mobile_service && <span style={{ background: '#e8f0fe', color: '#3c4ec4', padding: '1px 6px', borderRadius: 4, fontSize: 10, fontWeight: 600 }}>📱 Mobile</span>}
+            {(biz as any).service_area === 'nationwide' && <span style={{ background: '#f0f4ff', color: '#3730a3', padding: '1px 6px', borderRadius: 4, fontSize: 10, fontWeight: 600 }}>🇺🇸 Nationwide</span>}
+            {(biz as any).service_area === 'online' && <span style={{ background: '#f0fdf4', color: '#166534', padding: '1px 6px', borderRadius: 4, fontSize: 10, fontWeight: 600 }}>💻 Online</span>}
+            {(biz as any).service_area === 'statewide' && <span style={{ background: '#fafaf0', color: '#713f12', padding: '1px 6px', borderRadius: 4, fontSize: 10, fontWeight: 600 }}>🗺 Statewide</span>}
             {openStatus !== null && (
               <span style={{
                 background: openStatus ? '#e8f5e9' : '#fdecea',
@@ -143,6 +146,7 @@ export function SearchPage() {
   const [shield, setShield] = useState(searchParams.get('shield') === 'true')
   const [openNow, setOpenNow] = useState(searchParams.get('open') === 'true')
   const [mobile, setMobile] = useState(searchParams.get('mobile') === 'true')
+  const [nationwide, setNationwide] = useState(searchParams.get('nationwide') === 'true')
 
   const [results, setResults] = useState<Business[]>([])
   const [count, setCount] = useState(0)
@@ -156,7 +160,7 @@ export function SearchPage() {
 
   const doSearch = useCallback(async (params: {
     q: string; city: string; state: string; category: string
-    shield: boolean; openNow: boolean; mobile: boolean
+    shield: boolean; openNow: boolean; mobile: boolean; nationwide?: boolean
   }) => {
     if (abortRef.current) abortRef.current.abort()
     abortRef.current = new AbortController()
@@ -172,6 +176,7 @@ export function SearchPage() {
     if (params.shield) sp.set('shield', 'true')
     if (params.openNow) sp.set('open', 'true')
     if (params.mobile) sp.set('mobile', 'true')
+    if (params.nationwide) sp.set('nationwide', 'true')
 
     try {
       const res = await fetch(`/api/search?${sp}`, { signal: abortRef.current.signal })
@@ -191,7 +196,7 @@ export function SearchPage() {
   // Geolocate user on first load if no search params
   useEffect(() => {
     if (searchParams.toString()) {
-      doSearch({ q, city, state, category, shield, openNow, mobile })
+      doSearch({ q, city, state, category, shield, openNow, mobile, nationwide })
       return
     }
     if (!navigator.geolocation) return
@@ -235,14 +240,15 @@ export function SearchPage() {
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
-    doSearch({ q, city, state, category, shield, openNow, mobile })
+    doSearch({ q, city, state, category, shield, openNow, mobile, nationwide })
   }
 
-  function toggleFilter(key: 'shield' | 'openNow' | 'mobile') {
-    const next = { shield, openNow, mobile, [key]: key === 'shield' ? !shield : key === 'openNow' ? !openNow : !mobile }
+  function toggleFilter(key: 'shield' | 'openNow' | 'mobile' | 'nationwide') {
+    const next = { shield, openNow, mobile, nationwide, [key]: key === 'shield' ? !shield : key === 'openNow' ? !openNow : key === 'mobile' ? !mobile : !nationwide }
     if (key === 'shield') setShield(!shield)
     if (key === 'openNow') setOpenNow(!openNow)
     if (key === 'mobile') setMobile(!mobile)
+    if (key === 'nationwide') setNationwide(!nationwide)
     if (searched) doSearch({ q, city, state, category, ...next })
   }
 
@@ -340,7 +346,8 @@ export function SearchPage() {
               { key: 'shield', label: '🛡 Gold Shield', active: shield },
               { key: 'openNow', label: '🟢 Open Now', active: openNow },
               { key: 'mobile', label: '📱 Mobile Service', active: mobile },
-            ] as { key: 'shield'|'openNow'|'mobile'; label: string; active: boolean }[]).map(f => (
+              { key: 'nationwide', label: '🇺🇸 Nationwide', active: nationwide },
+            ] as { key: 'shield'|'openNow'|'mobile'|'nationwide'; label: string; active: boolean }[]).map(f => (
               <button key={f.key} type="button" onClick={() => toggleFilter(f.key)}
                 style={{
                   padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 500, cursor: 'pointer', border: '1px solid',

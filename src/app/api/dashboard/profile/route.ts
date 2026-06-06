@@ -13,7 +13,7 @@ export async function PATCH(req: NextRequest) {
   const {
     name, description, phone, website, email,
     address, suite, city, state, zip,
-    hours, is_mobile_service,
+    hours, is_mobile_service, service_area,
     logo_url, cover_photo_url, photos,
   } = body
 
@@ -39,6 +39,7 @@ export async function PATCH(req: NextRequest) {
       zip: zip?.trim() || null,
       hours: hours || null,
       is_mobile_service: is_mobile_service ?? false,
+      service_area: service_area ?? 'local',
       logo_url: logo_url || null,
       cover_photo_url: cover_photo_url || null,
       photos: photos || [],

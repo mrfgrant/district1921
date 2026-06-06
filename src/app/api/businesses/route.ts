@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const {
     name, category, slug, honor_pledge,
-    is_mobile_service, address, suite, city, state, zip,
+    is_mobile_service, service_area, address, suite, city, state, zip,
     phone, website, email, description, hours,
   } = body
 
@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
       subscription_status,
       honor_pledge,
       is_mobile_service: is_mobile_service ?? false,
+      service_area: service_area ?? 'local',
       address: address?.trim() || null,
       suite: suite?.trim() || null,
       city: city.trim(),

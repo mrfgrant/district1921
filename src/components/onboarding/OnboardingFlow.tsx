@@ -7,7 +7,8 @@ import { slugify } from '@/lib/utils'
 type ServiceType = 'storefront' | 'mobile_only' | 'both'
 interface FormData {
   name: string; category: BusinessCategory | ''; honor_pledge: boolean
-  service_type: ServiceType; address: string; suite: string
+  service_type: ServiceType; service_area: 'local'|'statewide'|'nationwide'|'online'
+  address: string; suite: string
   city: string; state: string; zip: string
   phone: string; website: string; email: string
   description: string; hours: BusinessHours
@@ -128,7 +129,7 @@ export function OnboardingFlow({ userId, userEmail, isAdmin }: {
       const res = await fetch('/api/businesses', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...form, is_mobile_service: form.service_type !== 'storefront',
+          ...form, is_mobile_service: form.service_type !== 'storefront', service_area: form.service_area,
           slug: slugify(form.name) + '-' + Math.random().toString(36).slice(2,6),
           owner_id: userId, is_admin: isAdmin,
         }),
@@ -282,6 +283,31 @@ export function OnboardingFlow({ userId, userEmail, isAdmin }: {
                       <div className="si">{o.icon}</div>
                       <div className="st">{o.title}</div>
                       <div className="sd">{o.desc}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+
+              {/* Service Area */}
+              <div className="ob-field">
+                <label className="ob-label">Service Area</label>
+                <span className="ob-sublabel">Where do you serve customers? This determines where you appear in search results.</span>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+                  {([
+                    {val:'local',icon:'📍',title:'Local',desc:'My city & surrounding area'},
+                    {val:'statewide',icon:'🗺',title:'Statewide',desc:'Anywhere in my state'},
+                    {val:'nationwide',icon:'🇺🇸',title:'Nationwide',desc:'Serving customers across the US'},
+                    {val:'online',icon:'💻',title:'Online / Virtual',desc:'No physical location — fully online'},
+                  ] as {val:'local'|'statewide'|'nationwide'|'online';icon:string;title:string;desc:string}[]).map(o => (
+                    <div key={o.val}
+                      style={{border:`1.5px solid ${form.service_area===o.val?'#1a3a2a':'#d4cfc7'}`,borderRadius:8,padding:'12px 14px',cursor:'pointer',background:form.service_area===o.val?'#f0faf4':'#fff',transition:'all 0.15s'}}
+                      onClick={() => setField('service_area', o.val)}>
+                      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
+                        <span style={{fontSize:18}}>{o.icon}</span>
+                        <span style={{fontSize:13,fontWeight:700,color:form.service_area===o.val?'#1a3a2a':'#1c1c1c'}}>{o.title}</span>
+                      </div>
+                      <div style={{fontSize:11,color:'#6b7280',lineHeight:1.4}}>{o.desc}</div>
                     </div>
                   ))}
                 </div>

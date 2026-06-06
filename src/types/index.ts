@@ -73,6 +73,7 @@ export interface Business {
   lat: number | null
   lng: number | null
   is_mobile_service: boolean
+  service_area: 'local' | 'statewide' | 'nationwide' | 'online'
 
   // Branding (paid only)
   logo_url: string | null

@@ -33,6 +33,7 @@ export function ProfileEditor({ business: initial }: { business: any }) {
     state: initial.state ?? '',
     zip: initial.zip ?? '',
     is_mobile_service: initial.is_mobile_service ?? false,
+    service_area: (initial.service_area ?? 'local') as 'local'|'statewide'|'nationwide'|'online',
     logo_url: initial.logo_url ?? '',
     cover_photo_url: initial.cover_photo_url ?? '',
     photos: (initial.photos ?? []) as string[],
@@ -204,6 +205,33 @@ export function ProfileEditor({ business: initial }: { business: any }) {
               ))}
             </div>
           </div>
+
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Service Area</label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {([
+                { val: 'local', icon: '📍', title: 'Local', desc: 'My city & area' },
+                { val: 'statewide', icon: '🗺', title: 'Statewide', desc: 'Anywhere in my state' },
+                { val: 'nationwide', icon: '🇺🇸', title: 'Nationwide', desc: 'Serving all of the US' },
+                { val: 'online', icon: '💻', title: 'Online / Virtual', desc: 'Fully online, no location' },
+              ] as { val: 'local'|'statewide'|'nationwide'|'online'; icon: string; title: string; desc: string }[]).map(o => (
+                <button key={o.val} type="button" onClick={() => set('service_area', o.val)}
+                  style={{
+                    border: `1.5px solid ${form.service_area === o.val ? '#C9A84C' : '#2A2A35'}`,
+                    borderRadius: 8, padding: '12px 14px', cursor: 'pointer', textAlign: 'left',
+                    background: form.service_area === o.val ? 'rgba(201,168,76,0.08)' : '#1C1C23',
+                    transition: 'all 0.15s',
+                  }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                    <span style={{ fontSize: 18 }}>{o.icon}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: form.service_area === o.val ? '#C9A84C' : '#F0EDE8' }}>{o.title}</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: '#6B6B80', lineHeight: 1.4 }}>{o.desc}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
         </div>
       )}
 
