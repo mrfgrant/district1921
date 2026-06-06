@@ -1,23 +1,10 @@
-import { HeroSearch } from '@/components/search/HeroSearch'
-import { SpotlightFeature } from '@/components/community/SpotlightFeature'
-import { CategoryGrid } from '@/components/business/CategoryGrid'
-import { createClient } from '@/lib/supabase/server'
+import { ComingSoon } from '@/components/landing/ComingSoon'
 
-export default async function HomePage() {
-  const supabase = createClient()
+export const metadata = {
+  title: 'District 1921 — Coming Soon',
+  description: 'A nationwide community business directory. Built for us, by us. Pre-registration open now.',
+}
 
-  const { data: spotlight } = await supabase
-    .from('spotlights')
-    .select('*, business:businesses(*)')
-    .order('week_of', { ascending: false })
-    .limit(1)
-    .single()
-
-  return (
-    <div>
-      <HeroSearch />
-      {spotlight && <SpotlightFeature spotlight={spotlight} />}
-      <CategoryGrid />
-    </div>
-  )
+export default function HomePage() {
+  return <ComingSoon />
 }
