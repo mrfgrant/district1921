@@ -82,7 +82,7 @@ export function BusinessProfile({ business: biz, deals, events, isPaid }: {
       <div className="bp">
         {/* Cover */}
         <div style={{
-          height: 260,
+          height: 300,
           background: biz.cover_photo_url
             ? `url(${biz.cover_photo_url}) center/cover`
             : `url('/hero-district.png') center/cover`,
@@ -108,9 +108,9 @@ export function BusinessProfile({ business: biz, deals, events, isPaid }: {
           <div style={{ maxWidth: 960, margin: '0 auto', display: 'flex', alignItems: 'flex-end', gap: 20, paddingTop: 0 }}>
             {/* Logo */}
             <div style={{
-              width: 88, height: 88, borderRadius: 14,
+              width: 96, height: 96, borderRadius: 14,
               background: biz.logo_url ? `url(${biz.logo_url}) center/cover` : '#fff',
-              border: '3px solid #fff', flexShrink: 0, marginTop: -44,
+              border: '4px solid #fff', flexShrink: 0, marginTop: -48,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontFamily: "'Playfair Display', serif", fontSize: 36,
               fontWeight: 700, color: '#2d6a4f',
@@ -215,6 +215,24 @@ export function BusinessProfile({ business: biz, deals, events, isPaid }: {
               <div style={{ background: '#fff', border: '1px solid #e5e0d5', borderRadius: 12, padding: 24, marginBottom: 20 }}>
                 <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 700, color: '#1a3a2a', marginBottom: 14, paddingBottom: 14, borderBottom: '1px solid #e5e0d5' }}>About</h2>
                 <p style={{ fontSize: 14, lineHeight: 1.8, color: '#4a4540' }}>{biz.description}</p>
+              </div>
+            )}
+
+
+            {/* Photo Gallery */}
+            {biz.photos && biz.photos.length > 0 && (
+              <div style={{ background: '#fff', border: '1px solid #e5e0d5', borderRadius: 12, padding: 24, marginBottom: 20 }}>
+                <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 18, fontWeight: 700, color: '#1a3a2a', marginBottom: 14, paddingBottom: 14, borderBottom: '1px solid #e5e0d5' }}>Photos</h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8 }}>
+                  {biz.photos.map((url: string, i: number) => (
+                    <a key={url} href={url} target="_blank" rel="noopener noreferrer"
+                      style={{ aspectRatio: '1', borderRadius: 8, overflow: 'hidden', display: 'block', background: '#f0ebe0' }}>
+                      <img src={url} alt={`${biz.name} photo ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.2s' }}
+                        onMouseOver={e => (e.currentTarget.style.transform = 'scale(1.04)')}
+                        onMouseOut={e => (e.currentTarget.style.transform = 'scale(1)')} />
+                    </a>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -371,6 +389,58 @@ export function BusinessProfile({ business: biz, deals, events, isPaid }: {
               </div>
             )}
 
+
+
+              {/* Social Links */}
+              {(biz.social_facebook || biz.social_instagram || biz.social_twitter || biz.social_linkedin || biz.social_youtube || biz.social_tiktok) && (
+                <div style={{ background: '#fff', border: '1px solid #e5e0d5', borderRadius: 12, padding: '16px 20px', marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Follow Us</div>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    {biz.social_instagram && (
+                      <a href={biz.social_instagram.startsWith('http') ? biz.social_instagram : `https://instagram.com/${biz.social_instagram.replace('@','')}`}
+                        target="_blank" rel="noopener noreferrer"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 20, border: '1px solid #e5e0d5', fontSize: 12, fontWeight: 600, color: '#E1306C', textDecoration: 'none', background: '#fff' }}>
+                        📸 Instagram
+                      </a>
+                    )}
+                    {biz.social_facebook && (
+                      <a href={biz.social_facebook.startsWith('http') ? biz.social_facebook : `https://facebook.com/${biz.social_facebook}`}
+                        target="_blank" rel="noopener noreferrer"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 20, border: '1px solid #e5e0d5', fontSize: 12, fontWeight: 600, color: '#1877F2', textDecoration: 'none', background: '#fff' }}>
+                        👤 Facebook
+                      </a>
+                    )}
+                    {biz.social_twitter && (
+                      <a href={biz.social_twitter.startsWith('http') ? biz.social_twitter : `https://x.com/${biz.social_twitter.replace('@','')}`}
+                        target="_blank" rel="noopener noreferrer"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 20, border: '1px solid #e5e0d5', fontSize: 12, fontWeight: 600, color: '#1DA1F2', textDecoration: 'none', background: '#fff' }}>
+                        𝕏 Twitter/X
+                      </a>
+                    )}
+                    {biz.social_linkedin && (
+                      <a href={biz.social_linkedin.startsWith('http') ? biz.social_linkedin : `https://linkedin.com/in/${biz.social_linkedin}`}
+                        target="_blank" rel="noopener noreferrer"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 20, border: '1px solid #e5e0d5', fontSize: 12, fontWeight: 600, color: '#0A66C2', textDecoration: 'none', background: '#fff' }}>
+                        💼 LinkedIn
+                      </a>
+                    )}
+                    {biz.social_youtube && (
+                      <a href={biz.social_youtube.startsWith('http') ? biz.social_youtube : `https://youtube.com/@${biz.social_youtube.replace('@','')}`}
+                        target="_blank" rel="noopener noreferrer"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 20, border: '1px solid #e5e0d5', fontSize: 12, fontWeight: 600, color: '#FF0000', textDecoration: 'none', background: '#fff' }}>
+                        ▶ YouTube
+                      </a>
+                    )}
+                    {biz.social_tiktok && (
+                      <a href={biz.social_tiktok.startsWith('http') ? biz.social_tiktok : `https://tiktok.com/@${biz.social_tiktok.replace('@','')}`}
+                        target="_blank" rel="noopener noreferrer"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 20, border: '1px solid #e5e0d5', fontSize: 12, fontWeight: 600, color: '#010101', textDecoration: 'none', background: '#fff' }}>
+                        🎵 TikTok
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
 
             {/* Ad slot — serves paid ads or house ad fallback */}
             <AdSlot placement="sidebar" city={biz.city} state={biz.state} />

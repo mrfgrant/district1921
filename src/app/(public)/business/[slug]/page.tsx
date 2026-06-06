@@ -33,7 +33,8 @@ export default async function BusinessPage({ params }: { params: { slug: string 
       description, hours, photos, logo_url, cover_photo_url,
       is_mobile_service, gold_shield, honor_pledge,
       rating_avg, rating_count, checkin_count, follow_count,
-      external_rating_url, created_at, owner_id
+      external_rating_url, created_at, owner_id,
+      social_facebook, social_instagram, social_twitter, social_linkedin, social_youtube, social_tiktok
     `)
     .eq('slug', params.slug)
     .eq('status', 'active')
