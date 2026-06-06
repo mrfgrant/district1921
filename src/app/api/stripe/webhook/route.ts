@@ -3,7 +3,8 @@ import { stripe } from '@/lib/stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
 import Stripe from 'stripe'
 
-export const config = { api: { bodyParser: false } }
+// App Router route handlers receive raw Request — no body parser config needed
+export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
   const body = await req.text()
