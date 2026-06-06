@@ -469,6 +469,23 @@ export function ComingSoon() {
           <p className="cs-hero-sub">
             A nationwide directory where community members discover, share, and support businesses — and owners build a real presence. <strong style={{color:'var(--gold)'}}>Free to search. Free to list.</strong>
           </p>
+          <div style={{display:'flex',gap:'12px',flexWrap:'wrap',marginTop:'28px'}}>
+            <a href="/login?next=/onboarding" style={{
+              display:'inline-block',background:'#c9a84c',color:'#1a3a2a',
+              padding:'14px 28px',fontFamily:"'DM Sans',sans-serif",fontSize:'14px',
+              fontWeight:700,textDecoration:'none',borderRadius:'6px',
+            }}>
+              List Your Business →
+            </a>
+            <a href="#register" style={{
+              display:'inline-block',background:'rgba(255,255,255,0.12)',
+              border:'1px solid rgba(255,255,255,0.3)',color:'rgba(255,255,255,0.9)',
+              padding:'14px 28px',fontFamily:"'DM Sans',sans-serif",fontSize:'14px',
+              fontWeight:500,textDecoration:'none',borderRadius:'6px',
+            }}>
+              Join the Waitlist
+            </a>
+          </div>
         </div>
       </div>
 
