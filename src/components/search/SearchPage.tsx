@@ -154,6 +154,7 @@ export function SearchPage() {
   const [searched, setSearched] = useState(false)
   const [view, setView] = useState<'list'|'map'>('map')
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number; city: string; state: string } | null>(null)
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number; city?: string; state?: string } | undefined>(undefined)
   const [locating, setLocating] = useState(false)
 
   const abortRef = useRef<AbortController | null>(null)
@@ -183,6 +184,36 @@ export function SearchPage() {
       const data = await res.json()
       setResults(data.results ?? [])
       setCount(data.count ?? 0)
+
+  // Resolve map center from search state/city when results come back
+  const STATE_CENTERS: Record<string, { lat: number; lng: number }> = {
+    GA:{lat:32.9,lng:-83.4},AL:{lat:32.8,lng:-86.8},FL:{lat:27.8,lng:-81.6},
+    SC:{lat:33.8,lng:-80.9},NC:{lat:35.5,lng:-79.4},TN:{lat:35.9,lng:-86.4},
+    TX:{lat:31.0,lng:-99.9},CA:{lat:36.7,lng:-119.4},NY:{lat:42.9,lng:-75.5},
+    IL:{lat:40.6,lng:-89.2},OH:{lat:40.4,lng:-82.8},VA:{lat:37.4,lng:-79.0},
+    PA:{lat:41.2,lng:-77.2},MI:{lat:44.3,lng:-85.4},NJ:{lat:40.1,lng:-74.5},
+    WA:{lat:47.4,lng:-120.5},AZ:{lat:34.2,lng:-111.1},MA:{lat:42.4,lng:-71.8},
+    CO:{lat:39.0,lng:-105.5},MD:{lat:39.0,lng:-76.8},LA:{lat:31.2,lng:-92.0},
+    MO:{lat:38.4,lng:-92.5},WI:{lat:44.8,lng:-89.8},MN:{lat:46.4,lng:-93.1},
+    IN:{lat:40.3,lng:-86.1},KY:{lat:37.5,lng:-85.3},MS:{lat:32.7,lng:-89.7},
+    AR:{lat:34.8,lng:-92.2},KS:{lat:38.5,lng:-98.4},NV:{lat:38.8,lng:-116.4},
+    DC:{lat:38.9,lng:-77.0},
+  }
+
+      // Update map center based on search params
+      const searchedCity = params.city?.trim()
+      const searchedState = params.state?.trim().toUpperCase()
+      if (searchedCity || searchedState) {
+        // Try to find a result with coordinates to center on
+        const withCoords = (data.results ?? []).find((r: any) => r.lat && r.lng)
+        if (withCoords && searchedCity) {
+          // Found results in searched city — center there
+          setMapCenter({ lat: withCoords.lat, lng: withCoords.lng, city: searchedCity, state: searchedState })
+        } else if (searchedState && STATE_CENTERS[searchedState]) {
+          // No city match or no city specified — center on state
+          setMapCenter({ ...STATE_CENTERS[searchedState], state: searchedState, city: '' })
+        }
+      }
 
       // Update URL
       router.replace(`/search?${sp}`, { scroll: false })
@@ -389,7 +420,7 @@ export function SearchPage() {
 
         {/* Map view */}
         {searched && !loading && view === 'map' && results.length > 0 && (
-          <BusinessMap businesses={results} center={userLocation ?? undefined} />
+          <BusinessMap businesses={results} center={mapCenter ?? userLocation ?? undefined} />
         )}
 
         {/* Results */}

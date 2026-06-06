@@ -59,6 +59,14 @@ export function BusinessMap({ businesses, center }: {
     infoWindowRef.current = new google.maps.InfoWindow()
   }, [mapsReady, center])
 
+  // Re-center map when center prop changes (e.g. new state searched)
+  useEffect(() => {
+    if (!mapInstanceRef.current || !mapsReady || !center?.lat || !center?.lng) return
+    const hasCity = !!center.city
+    mapInstanceRef.current.setCenter({ lat: center.lat, lng: center.lng })
+    mapInstanceRef.current.setZoom(hasCity ? 11 : 7)
+  }, [center?.lat, center?.lng, center?.city, mapsReady])
+
   useEffect(() => {
     if (!mapInstanceRef.current || !mapsReady) return
     const google = (window as any).google
