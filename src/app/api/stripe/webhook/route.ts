@@ -139,9 +139,8 @@ export async function POST(req: NextRequest) {
 
       // ── Gold Shield one-time payment confirmed ────────────────────────────
       case 'payment_intent.succeeded': {
-        const pi = event.data.object as Stripe.PaymentIntent
-        // Only handle if it's a Gold Shield payment (checkout.session.completed handles the rest)
-        // Additional verification logic runs via /api/shield route
+        // Gold Shield one-time payments are handled by checkout.session.completed
+        // Additional verification flow runs via /api/shield route
         break
       }
 
