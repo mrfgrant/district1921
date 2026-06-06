@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendBusinessSubmitted } from '@/lib/email'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,7 +11,6 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
-
   const {
     name, category, slug, honor_pledge,
     is_mobile_service, address, city, state, zip,
@@ -18,18 +18,16 @@ export async function POST(req: NextRequest) {
     description, hours,
   } = body
 
-  // Validate required fields
   if (!name || !category || !city || !state) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
-
   if (!honor_pledge) {
     return NextResponse.json({ error: 'Honor pledge is required' }, { status: 400 })
   }
 
   const admin = createAdminClient()
 
-  // Ensure slug is unique
+  // Ensure slug uniqueness
   let finalSlug = slug
   const { data: existing } = await admin
     .from('businesses')
@@ -41,7 +39,6 @@ export async function POST(req: NextRequest) {
     finalSlug = slug + '-' + Math.random().toString(36).slice(2, 6)
   }
 
-  // Build location point for PostGIS (we'll geocode async later)
   const { data: business, error } = await admin
     .from('businesses')
     .insert({
@@ -62,7 +59,7 @@ export async function POST(req: NextRequest) {
       email: email?.trim() || null,
       description: description?.trim() || null,
       hours: hours || null,
-      profile_completion: 30, // base score for completing onboarding
+      profile_completion: 30,
     })
     .select('id, slug')
     .single()
@@ -72,13 +69,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to create listing' }, { status: 500 })
   }
 
-  // Upgrade user role to free_owner
-  await admin
-    .from('profiles')
-    .update({ role: 'free_owner' })
-    .eq('id', user.id)
+  // Upgrade role to free_owner
+  await admin.from('profiles').update({ role: 'free_owner' }).eq('id', user.id)
 
-  // TODO: Send confirmation email via Resend
+  // Send confirmation email via Resend
+  try {
+    await sendBusinessSubmitted(user.email!, name.trim())
+  } catch (emailErr) {
+    // Don't fail the request if email fails — business is already saved
+    console.error('Business submitted email error:', emailErr)
+  }
 
   return NextResponse.json({ id: business.id, slug: business.slug })
 }
