@@ -14,6 +14,7 @@ const ALLOWED_UPDATE_FIELDS = new Set([
   'hours','gold_shield','honor_pledge',
   'subscription_status','status',
   'external_rating_url',
+  'social_facebook','social_instagram','social_twitter','social_linkedin','social_youtube','social_tiktok',
 ])
 
 export async function POST(req: NextRequest) {

@@ -14,6 +14,7 @@ export async function PATCH(req: NextRequest) {
     name, description, phone, website, email,
     address, suite, city, state, zip,
     hours, is_mobile_service, service_area,
+    social_facebook, social_instagram, social_twitter, social_linkedin, social_youtube, social_tiktok,
     logo_url, cover_photo_url, photos,
   } = body
 
@@ -40,6 +41,12 @@ export async function PATCH(req: NextRequest) {
       hours: hours || null,
       is_mobile_service: is_mobile_service ?? false,
       service_area: service_area ?? 'local',
+      social_facebook: social_facebook?.trim() || null,
+      social_instagram: social_instagram?.trim() || null,
+      social_twitter: social_twitter?.trim() || null,
+      social_linkedin: social_linkedin?.trim() || null,
+      social_youtube: social_youtube?.trim() || null,
+      social_tiktok: social_tiktok?.trim() || null,
       logo_url: logo_url || null,
       cover_photo_url: cover_photo_url || null,
       photos: photos || [],

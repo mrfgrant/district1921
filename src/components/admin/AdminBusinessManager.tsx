@@ -23,6 +23,7 @@ const DEFAULT_FORM = {
   service_area:'local', is_mobile_service:false,
   subscription_status:'active', gold_shield:false, honor_pledge:true,
   logo_url:'', cover_photo_url:'', photos:[] as string[],
+  social_facebook:'', social_instagram:'', social_twitter:'', social_linkedin:'', social_youtube:'', social_tiktok:'',
   hours:{...EMPTY_HOURS}, includeHours:false,
 }
 
@@ -70,6 +71,12 @@ export function AdminBusinessManager({ businesses: init }: { businesses: any[] }
       logo_url: biz.logo_url||'',
       cover_photo_url: biz.cover_photo_url||'',
       photos: biz.photos||[],
+      social_facebook: biz.social_facebook||'',
+      social_instagram: biz.social_instagram||'',
+      social_twitter: biz.social_twitter||'',
+      social_linkedin: biz.social_linkedin||'',
+      social_youtube: biz.social_youtube||'',
+      social_tiktok: biz.social_tiktok||'',
       hours: biz.hours||{...EMPTY_HOURS},
       includeHours: !!biz.hours,
     })
@@ -414,6 +421,24 @@ export function AdminBusinessManager({ businesses: init }: { businesses: any[] }
                     })}
                   </div>
                 )}
+              </div>
+
+
+              {/* Social Links */}
+              <div style={{marginBottom:20}}>
+                <label style={LB}>Social Media <span style={{color:'#6B6B80',textTransform:'none',letterSpacing:0,fontWeight:400}}>(optional)</span></label>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+                  {[
+                    {k:'social_instagram',p:'Instagram (@handle or URL)'},
+                    {k:'social_facebook',p:'Facebook (page name or URL)'},
+                    {k:'social_twitter',p:'X / Twitter (@handle or URL)'},
+                    {k:'social_linkedin',p:'LinkedIn (profile or URL)'},
+                    {k:'social_youtube',p:'YouTube (@handle or URL)'},
+                    {k:'social_tiktok',p:'TikTok (@handle or URL)'},
+                  ].map(f => (
+                    <input key={f.k} style={IS} placeholder={f.p} value={(form as any)[f.k]} onChange={e=>sf(f.k,e.target.value)} />
+                  ))}
+                </div>
               </div>
 
               <div style={{display:'flex',gap:10}}>
