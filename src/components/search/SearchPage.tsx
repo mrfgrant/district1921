@@ -185,32 +185,31 @@ export function SearchPage() {
       setResults(data.results ?? [])
       setCount(data.count ?? 0)
 
-  // Resolve map center from search state/city when results come back
-  const STATE_CENTERS: Record<string, { lat: number; lng: number }> = {
-    GA:{lat:32.9,lng:-83.4},AL:{lat:32.8,lng:-86.8},FL:{lat:27.8,lng:-81.6},
-    SC:{lat:33.8,lng:-80.9},NC:{lat:35.5,lng:-79.4},TN:{lat:35.9,lng:-86.4},
-    TX:{lat:31.0,lng:-99.9},CA:{lat:36.7,lng:-119.4},NY:{lat:42.9,lng:-75.5},
-    IL:{lat:40.6,lng:-89.2},OH:{lat:40.4,lng:-82.8},VA:{lat:37.4,lng:-79.0},
-    PA:{lat:41.2,lng:-77.2},MI:{lat:44.3,lng:-85.4},NJ:{lat:40.1,lng:-74.5},
-    WA:{lat:47.4,lng:-120.5},AZ:{lat:34.2,lng:-111.1},MA:{lat:42.4,lng:-71.8},
-    CO:{lat:39.0,lng:-105.5},MD:{lat:39.0,lng:-76.8},LA:{lat:31.2,lng:-92.0},
-    MO:{lat:38.4,lng:-92.5},WI:{lat:44.8,lng:-89.8},MN:{lat:46.4,lng:-93.1},
-    IN:{lat:40.3,lng:-86.1},KY:{lat:37.5,lng:-85.3},MS:{lat:32.7,lng:-89.7},
-    AR:{lat:34.8,lng:-92.2},KS:{lat:38.5,lng:-98.4},NV:{lat:38.8,lng:-116.4},
-    DC:{lat:38.9,lng:-77.0},
-  }
+      // Update map center to reflect the searched location
+      const STATE_CENTERS: Record<string, { lat: number; lng: number }> = {
+        AL:{lat:32.8,lng:-86.8},AK:{lat:64.2,lng:-153.4},AZ:{lat:34.2,lng:-111.1},AR:{lat:34.8,lng:-92.2},
+        CA:{lat:36.7,lng:-119.4},CO:{lat:39.0,lng:-105.5},CT:{lat:41.6,lng:-72.7},DE:{lat:39.0,lng:-75.5},
+        FL:{lat:27.8,lng:-81.6},GA:{lat:32.9,lng:-83.4},HI:{lat:20.8,lng:-156.3},ID:{lat:44.1,lng:-114.7},
+        IL:{lat:40.6,lng:-89.2},IN:{lat:40.3,lng:-86.1},IA:{lat:42.0,lng:-93.6},KS:{lat:38.5,lng:-98.4},
+        KY:{lat:37.5,lng:-85.3},LA:{lat:31.2,lng:-92.0},ME:{lat:45.4,lng:-69.0},MD:{lat:39.0,lng:-76.8},
+        MA:{lat:42.4,lng:-71.8},MI:{lat:44.3,lng:-85.4},MN:{lat:46.4,lng:-93.1},MS:{lat:32.7,lng:-89.7},
+        MO:{lat:38.4,lng:-92.5},MT:{lat:46.9,lng:-110.4},NE:{lat:41.5,lng:-99.9},NV:{lat:38.8,lng:-116.4},
+        NH:{lat:44.0,lng:-71.6},NJ:{lat:40.1,lng:-74.5},NM:{lat:34.5,lng:-106.2},NY:{lat:42.9,lng:-75.5},
+        NC:{lat:35.5,lng:-79.4},ND:{lat:47.5,lng:-100.5},OH:{lat:40.4,lng:-82.8},OK:{lat:35.6,lng:-96.9},
+        OR:{lat:44.6,lng:-122.1},PA:{lat:41.2,lng:-77.2},RI:{lat:41.7,lng:-71.5},SC:{lat:33.8,lng:-80.9},
+        SD:{lat:44.4,lng:-100.2},TN:{lat:35.9,lng:-86.4},TX:{lat:31.0,lng:-99.9},UT:{lat:39.3,lng:-111.1},
+        VT:{lat:44.0,lng:-72.7},VA:{lat:37.4,lng:-79.0},WA:{lat:47.4,lng:-120.5},WV:{lat:38.6,lng:-80.5},
+        WI:{lat:44.8,lng:-89.8},WY:{lat:43.1,lng:-107.6},DC:{lat:38.9,lng:-77.0},
+      }
 
-      // Update map center based on search params
-      const searchedCity = params.city?.trim()
-      const searchedState = params.state?.trim().toUpperCase()
+      const searchedCity = params.city?.trim() ?? ''
+      const searchedState = (params.state?.trim() ?? '').toUpperCase()
+
       if (searchedCity || searchedState) {
-        // Try to find a result with coordinates to center on
         const withCoords = (data.results ?? []).find((r: any) => r.lat && r.lng)
         if (withCoords && searchedCity) {
-          // Found results in searched city — center there
           setMapCenter({ lat: withCoords.lat, lng: withCoords.lng, city: searchedCity, state: searchedState })
         } else if (searchedState && STATE_CENTERS[searchedState]) {
-          // No city match or no city specified — center on state
           setMapCenter({ ...STATE_CENTERS[searchedState], state: searchedState, city: '' })
         }
       }
