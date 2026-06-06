@@ -180,7 +180,7 @@ export function SearchPage() {
     if (params.nationwide) sp.set('nationwide', 'true')
 
     try {
-      const res = await fetch(`/api/search?${sp}`, { signal: abortRef.current.signal })
+      const res = await fetch(`/api/search?${sp}`, { signal: abortRef.current.signal, cache: 'no-store' })
       const data = await res.json()
       setResults(data.results ?? [])
       setCount(data.count ?? 0)
@@ -423,17 +423,7 @@ export function SearchPage() {
         )}
 
         {/* Results */}
-        {!searched ? (
-          <div style={{ textAlign: 'center', padding: '64px 0' }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
-            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 700, color: '#1a3a2a', marginBottom: 8 }}>
-              Search the directory
-            </p>
-            <p style={{ fontSize: 14, color: '#6b7280', maxWidth: 400, margin: '0 auto' }}>
-              Enter a city, category, or business name to find community businesses near you.
-            </p>
-          </div>
-        ) : loading ? (
+        {loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {[1,2,3,4,5].map(i => (
               <div key={i} style={{ background: '#fff', border: '1px solid #e5e0d5', borderRadius: 12, padding: 16, height: 90, animation: 'pulse 1.5s ease infinite', opacity: 0.6 }} />
