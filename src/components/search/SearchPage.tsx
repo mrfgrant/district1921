@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { BusinessMap } from '@/components/map/BusinessMap'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { CATEGORY_LABELS, BusinessCategory } from '@/types'
@@ -147,6 +148,7 @@ export function SearchPage() {
   const [count, setCount] = useState(0)
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
+  const [view, setView] = useState<'list'|'map'>('list')
 
   const abortRef = useRef<AbortController | null>(null)
 
@@ -306,6 +308,26 @@ export function SearchPage() {
             ))}
           </div>
         </div>
+
+        {/* View toggle */}
+        {searched && !loading && results.length > 0 && (
+          <div style={{ display: 'flex', gap: 2, background: '#fff', border: '1px solid #d4cfc7', borderRadius: 8, padding: 3, width: 'fit-content', marginBottom: 16 }}>
+            {([['list','☰ List'],['map','🗺 Map']] as ['list'|'map',string][]).map(([v,label]) => (
+              <button key={v} type="button" onClick={() => setView(v)}
+                style={{ padding: '7px 16px', borderRadius: 6, border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s',
+                  background: view === v ? '#1a3a2a' : 'transparent',
+                  color: view === v ? '#fff' : '#6b7280',
+                }}>
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Map view */}
+        {searched && !loading && view === 'map' && results.length > 0 && (
+          <BusinessMap businesses={results} />
+        )}
 
         {/* Results */}
         {!searched ? (
