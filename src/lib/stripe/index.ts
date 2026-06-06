@@ -6,8 +6,8 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 })
 
 export const STRIPE_PRICES = {
-  subscription: process.env.STRIPE_SUBSCRIPTION_PRICE_ID!,  // $90/6mo
-  goldShield: process.env.STRIPE_GOLD_SHIELD_PRICE_ID!,      // $25 one-time
+  subscription: process.env.STRIPE_SUBSCRIPTION_PRICE_ID!,  // $90/6mo — price_1Tf7n25kKQFHA00bfLyTTYpW
+  goldShield: process.env.STRIPE_GOLD_SHIELD_PRICE_ID!,      // $25 one-time — price_1Tf88Z5kKQFHA00bivSecnCk
 } as const
 
 export async function createSubscriptionCheckout(
