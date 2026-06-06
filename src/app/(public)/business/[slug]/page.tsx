@@ -7,7 +7,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const supabase = createClient()
   const { data: biz } = await supabase
     .from('businesses')
-    .select('name, city, state, category, description')
+    .select('name, city, state, category, description, gold_shield, logo_url, rating_avg')
     .eq('slug', params.slug)
     .eq('status', 'active')
     .single()
@@ -16,9 +16,33 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
   const category = CATEGORY_LABELS[biz.category as BusinessCategory] ?? biz.category
 
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://district1921.com'
+  const ogParams = new URLSearchParams({
+    name: biz.name,
+    city: biz.city ?? '',
+    state: biz.state ?? '',
+    category: biz.category ?? '',
+    gold: biz.gold_shield ? '1' : '0',
+    ...(biz.logo_url ? { logo: biz.logo_url } : {}),
+    ...(biz.rating_avg ? { rating: String(biz.rating_avg) } : {}),
+  })
+  const ogImage = `${baseUrl}/api/og?${ogParams.toString()}`
+
   return {
-    title: `${biz.name} — ${category} in ${biz.city}, ${biz.state} | District 1921`,
-    description: biz.description?.slice(0, 160) ?? `${biz.name} is a community business in ${biz.city}, ${biz.state}.`,
+    title: `${biz.name} — District 1921`,
+    description: biz.description ?? `${biz.name} in ${biz.city}, ${biz.state} — District 1921 Community Business Directory`,
+    openGraph: {
+      title: biz.name,
+      description: biz.description ?? `${biz.name} · ${biz.city}, ${biz.state}`,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: biz.name }],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: biz.name,
+      description: biz.description ?? `${biz.name} · ${biz.city}, ${biz.state}`,
+      images: [ogImage],
+    },
   }
 }
 
