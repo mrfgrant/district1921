@@ -5,6 +5,17 @@ import { geocodeAddress } from '@/lib/maps/geocode'
 
 export const dynamic = 'force-dynamic'
 
+// Fields allowed in the businesses table
+const ALLOWED_UPDATE_FIELDS = new Set([
+  'name','category','description','phone','website','email',
+  'address','suite','city','state','zip',
+  'service_area','is_mobile_service',
+  'logo_url','cover_photo_url','photos',
+  'hours','gold_shield','honor_pledge',
+  'subscription_status','status',
+  'external_rating_url',
+])
+
 export async function POST(req: NextRequest) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -19,6 +30,7 @@ export async function POST(req: NextRequest) {
     name, category, description, phone, website, email,
     address, suite, city, state, zip,
     service_area, is_mobile_service,
+    logo_url, cover_photo_url, photos,
     hours, gold_shield, honor_pledge,
     subscription_status,
   } = body
@@ -29,12 +41,9 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient()
 
-  // Generate unique slug
   const base = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
-  const suffix = Math.random().toString(36).slice(2, 6)
-  const slug = `${base}-${suffix}`
+  const slug = `${base}-${Math.random().toString(36).slice(2, 6)}`
 
-  // Geocode address
   let locationPoint = null
   if (address && city && state) {
     const coords = await geocodeAddress(address, city, state, zip)
@@ -44,7 +53,7 @@ export async function POST(req: NextRequest) {
   const { data: business, error } = await admin
     .from('businesses')
     .insert({
-      owner_id: user.id, // admin owns it until transferred
+      owner_id: user.id,
       slug,
       name: name.trim(),
       category,
@@ -64,6 +73,9 @@ export async function POST(req: NextRequest) {
       description: description?.trim() || null,
       hours: hours || null,
       gold_shield: gold_shield ?? false,
+      logo_url: logo_url || null,
+      cover_photo_url: cover_photo_url || null,
+      photos: photos || [],
       profile_completion: 70,
       ...(locationPoint ? { location: locationPoint } : {}),
     })
@@ -72,7 +84,7 @@ export async function POST(req: NextRequest) {
 
   if (error) {
     console.error('Admin business create error:', error)
-    return NextResponse.json({ error: 'Failed to create business' }, { status: 500 })
+    return NextResponse.json({ error: error.message || 'Failed to create business' }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true, business })
@@ -90,14 +102,31 @@ export async function PATCH(req: NextRequest) {
   const { businessId, updates } = await req.json()
   if (!businessId) return NextResponse.json({ error: 'Missing businessId' }, { status: 400 })
 
-  const admin = createAdminClient()
+  // Strip any UI-only or unknown fields before sending to DB
+  const safeUpdates: Record<string, any> = {}
+  for (const [key, val] of Object.entries(updates || {})) {
+    if (ALLOWED_UPDATE_FIELDS.has(key)) {
+      safeUpdates[key] = val
+    }
+  }
 
+  // Normalize state to uppercase
+  if (safeUpdates.state) safeUpdates.state = String(safeUpdates.state).toUpperCase()
+  // Ensure hours is null not false when not included
+  if ('hours' in safeUpdates && !safeUpdates.hours) safeUpdates.hours = null
+
+  safeUpdates.updated_at = new Date().toISOString()
+
+  const admin = createAdminClient()
   const { error } = await admin
     .from('businesses')
-    .update({ ...updates, updated_at: new Date().toISOString() })
+    .update(safeUpdates)
     .eq('id', businessId)
 
-  if (error) return NextResponse.json({ error: 'Update failed' }, { status: 500 })
+  if (error) {
+    console.error('Admin business update error:', error)
+    return NextResponse.json({ error: error.message || 'Update failed' }, { status: 500 })
+  }
 
   return NextResponse.json({ ok: true })
 }
