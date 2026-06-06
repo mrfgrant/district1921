@@ -9,6 +9,7 @@ export function ComingSoon() {
   const [mode, setMode] = useState<Mode>('community')
   const [bizName, setBizName] = useState('')
   const [bizCity, setBizCity] = useState('')
+  const [ownerEmail, setOwnerEmail] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
 
   async function handleSubmit(e: React.FormEvent) {
@@ -624,6 +625,7 @@ export function ComingSoon() {
                     <div className="cs-suggest-hint">Know a business that should be listed? <strong>We'll research it, add it to our seed data, and notify the owner before launch.</strong></div>
                     <div className="cs-field"><input className="cs-input" type="text" placeholder="Business name" value={bizName} onChange={e => setBizName(e.target.value)} required /></div>
                     <div className="cs-field"><input className="cs-input" type="text" placeholder="City, State  (e.g. Atlanta, GA)" value={bizCity} onChange={e => setBizCity(e.target.value)} required /></div>
+                    <div className="cs-field"><input className="cs-input" type="email" placeholder="Business owner's email (optional — we'll invite them)" value={ownerEmail} onChange={e => setOwnerEmail(e.target.value)} /></div>
                     <div className="cs-field"><input className="cs-input" type="email" placeholder="Your email (optional)" value={email} onChange={e => setEmail(e.target.value)} /></div>
                   </>
                 ) : (
