@@ -1,4 +1,6 @@
+import { Suspense } from 'react'
 import { ComingSoon } from '@/components/landing/ComingSoon'
+import { AuthCodeHandler } from '@/components/landing/AuthCodeHandler'
 
 export const metadata = {
   title: 'District 1921 — Coming Soon',
@@ -6,5 +8,13 @@ export const metadata = {
 }
 
 export default function HomePage() {
-  return <ComingSoon />
+  return (
+    <>
+      {/* Silently handles ?code= if Supabase redirects here instead of /auth/callback */}
+      <Suspense>
+        <AuthCodeHandler />
+      </Suspense>
+      <ComingSoon />
+    </>
+  )
 }
