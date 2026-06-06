@@ -391,3 +391,117 @@ export async function sendReferralCredit({
     `,
   })
 }
+
+export async function sendSuggestionNotification({
+  businessName, businessCity, suggesterEmail,
+}: {
+  businessName: string; businessCity: string; suggesterEmail?: string
+}) {
+  const { Resend } = await import('resend')
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  await resend.emails.send({
+    from: 'District 1921 <hello@mail.district1921.com>',
+    to: 'mrfgrant@protonmail.com',
+    subject: `📬 New Business Suggestion: ${businessName}`,
+    html: `
+      <div style="font-family:'DM Sans',sans-serif;max-width:540px;margin:0 auto;padding:32px;background:#faf7f0">
+        <div style="background:#1a3a2a;padding:20px 28px;border-radius:10px 10px 0 0">
+          <h1 style="font-family:'Playfair Display',serif;color:#c9a84c;margin:0;font-size:20px">New Business Suggestion</h1>
+        </div>
+        <div style="background:#fff;border:1px solid #e5e0d5;border-top:none;padding:24px 28px;border-radius:0 0 10px 10px">
+          <table style="width:100%;border-collapse:collapse">
+            <tr><td style="padding:8px 0;color:#6b7280;font-size:13px;width:120px">Business</td><td style="padding:8px 0;font-weight:600;color:#1a3a2a;font-size:14px">${businessName}</td></tr>
+            <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Location</td><td style="padding:8px 0;color:#1a3a2a;font-size:13px">${businessCity || 'Not provided'}</td></tr>
+            <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Suggested by</td><td style="padding:8px 0;color:#1a3a2a;font-size:13px">${suggesterEmail || 'Anonymous'}</td></tr>
+          </table>
+          <a href="https://district1921.com/admin/suggestions" style="display:inline-block;margin-top:16px;background:#c9a84c;color:#1a3a2a;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:700;font-size:13px">Review in Admin →</a>
+        </div>
+      </div>
+    `,
+  })
+}
+
+export async function sendSuggestionConfirmation({
+  to, businessName,
+}: {
+  to: string; businessName: string
+}) {
+  const { Resend } = await import('resend')
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  await resend.emails.send({
+    from: 'District 1921 <hello@mail.district1921.com>',
+    to,
+    subject: `Thanks for suggesting ${businessName}`,
+    html: `
+      <div style="font-family:'DM Sans',sans-serif;max-width:540px;margin:0 auto;padding:32px;background:#faf7f0">
+        <div style="background:#1a3a2a;padding:20px 28px;border-radius:10px 10px 0 0;text-align:center">
+          <h1 style="font-family:'Playfair Display',serif;color:#c9a84c;margin:0;font-size:22px">District 1921</h1>
+        </div>
+        <div style="background:#fff;border:1px solid #e5e0d5;border-top:none;padding:32px 28px;border-radius:0 0 10px 10px;text-align:center">
+          <div style="font-size:40px;margin-bottom:12px">🙏</div>
+          <h2 style="font-family:'Playfair Display',serif;color:#1a3a2a;font-size:20px;margin:0 0 8px">Thank you!</h2>
+          <p style="color:#4a4540;font-size:14px;line-height:1.7;margin:0 0 20px">
+            We received your suggestion for <strong>${businessName}</strong>. Our team will research the business, reach out to the owner, and add them to the directory before launch.
+          </p>
+          <p style="color:#6b7280;font-size:13px">The community grows one business at a time. We appreciate you helping build District 1921.</p>
+        </div>
+      </div>
+    `,
+  })
+}
+
+export async function sendOwnerOutreach({
+  to, businessName, businessCity, suggesterEmail,
+}: {
+  to: string; businessName: string; businessCity?: string; suggesterEmail?: string
+}) {
+  const { Resend } = await import('resend')
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  const claimUrl = `${process.env.NEXT_PUBLIC_APP_URL}/login?next=/onboarding&ref=suggestion`
+  await resend.emails.send({
+    from: 'District 1921 <hello@mail.district1921.com>',
+    to,
+    subject: `${businessName} has been recommended on District 1921`,
+    html: `
+      <div style="font-family:'DM Sans',sans-serif;max-width:560px;margin:0 auto;background:#faf7f0;padding:32px">
+        <div style="background:linear-gradient(135deg,#1a3a2a,#2d6a4f);padding:28px 32px;border-radius:12px 12px 0 0;text-align:center">
+          <h1 style="font-family:'Playfair Display',serif;color:#c9a84c;margin:0 0 4px;font-size:24px;font-weight:900">District 1921</h1>
+          <p style="color:rgba(255,255,255,0.65);font-size:12px;margin:0;letter-spacing:0.1em;text-transform:uppercase">The Community Business Directory</p>
+        </div>
+        <div style="background:#fff;border:1px solid #e5e0d5;border-top:none;padding:32px;border-radius:0 0 12px 12px">
+          <h2 style="font-family:'Playfair Display',serif;color:#1a3a2a;font-size:22px;margin:0 0 16px;line-height:1.3">
+            Your business was recommended by the community.
+          </h2>
+          <p style="color:#4a4540;font-size:14px;line-height:1.75;margin:0 0 12px">
+            Someone in the District 1921 community suggested that <strong>${businessName}</strong>${businessCity ? ` in ${businessCity}` : ''} be listed in our directory — and we agree.
+          </p>
+          ${suggesterEmail ? `<p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0 0 20px;padding:12px 16px;background:#faf7f0;border-left:3px solid #c9a84c;border-radius:0 6px 6px 0;">Suggested by: <strong>${suggesterEmail}</strong></p>` : ''}
+          <p style="color:#4a4540;font-size:14px;line-height:1.75;margin:0 0 24px">
+            District 1921 is a nationwide directory built to connect the community with businesses like yours. Listing is <strong>free</strong> — and if you want a full business page with photos, hours, and analytics, you can upgrade at any time.
+          </p>
+
+          <div style="background:#faf7f0;border:1px solid #e5e0d5;border-radius:10px;padding:20px;margin-bottom:24px">
+            <p style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 12px">What you get — free listing includes:</p>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              ${['Your business name, category, and city in search results', 'A dedicated business page at district1921.com', 'Community check-ins, follows, and shares', 'One-click upgrade to a full Pro Page any time'].map(item => `
+              <div style="display:flex;align-items:flex-start;gap:10px">
+                <span style="color:#2d6a4f;font-size:16px;flex-shrink:0;margin-top:-1px">✓</span>
+                <span style="font-size:13px;color:#4a4540">${item}</span>
+              </div>`).join('')}
+            </div>
+          </div>
+
+          <a href="${claimUrl}" style="display:block;background:#c9a84c;color:#1a3a2a;text-align:center;padding:16px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;margin-bottom:16px">
+            Claim Your Free Listing →
+          </a>
+          <p style="color:#b0a898;font-size:11px;text-align:center;margin:0">
+            If this email was sent in error or you'd prefer not to be listed, simply ignore it — no action needed.
+          </p>
+        </div>
+        <p style="color:#b0a898;font-size:11px;text-align:center;margin-top:16px">
+          District 1921 · Community Business Directory · <a href="https://district1921.com" style="color:#b0a898">district1921.com</a>
+        </p>
+      </div>
+    `,
+  })
+}
