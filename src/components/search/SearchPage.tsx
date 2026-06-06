@@ -148,7 +148,9 @@ export function SearchPage() {
   const [count, setCount] = useState(0)
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
-  const [view, setView] = useState<'list'|'map'>('list')
+  const [view, setView] = useState<'list'|'map'>('map')
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number; city: string; state: string } | null>(null)
+  const [locating, setLocating] = useState(false)
 
   const abortRef = useRef<AbortController | null>(null)
 
@@ -186,6 +188,44 @@ export function SearchPage() {
     }
   }, [router])
 
+  // Geolocate user on first load if no search params
+  useEffect(() => {
+    if (searchParams.toString()) {
+      doSearch({ q, city, state, category, shield, openNow, mobile })
+      return
+    }
+    if (!navigator.geolocation) return
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude: lat, longitude: lng } = pos.coords
+        // Reverse geocode to get city/state
+        try {
+          const res = await fetch(
+            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&result_type=locality&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
+          )
+          const data = await res.json()
+          let detectedCity = '', detectedState = ''
+          if (data.results?.[0]) {
+            for (const c of data.results[0].address_components) {
+              if (c.types.includes('locality')) detectedCity = c.long_name
+              if (c.types.includes('administrative_area_level_1')) detectedState = c.short_name
+            }
+          }
+          setUserLocation({ lat, lng, city: detectedCity, state: detectedState })
+          if (detectedCity) {
+            setCity(detectedCity)
+            setState(detectedState)
+            doSearch({ q, city: detectedCity, state: detectedState, category, shield, openNow, mobile })
+          }
+        } catch {}
+        setLocating(false)
+      },
+      () => setLocating(false),
+      { timeout: 6000 }
+    )
+  }, []) // eslint-disable-line
+
   // Run search on mount if params exist
   useEffect(() => {
     if (searchParams.toString()) {
@@ -222,6 +262,12 @@ export function SearchPage() {
           <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.28em', textTransform: 'uppercase', color: '#c9a84c', marginBottom: 12 }}>
             District 1921 · Community Business Directory
           </p>
+          {locating && (
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
+              <span style={{ display: 'inline-block', animation: 'spin 1s linear infinite' }}>◌</span>
+              Detecting your location…
+            </div>
+          )}
           <form onSubmit={handleSearch}>
             <div style={{ display: 'flex', background: '#fff', borderRadius: 10, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.2)', marginBottom: 16 }}>
               <div style={{ flex: 2, display: 'flex', alignItems: 'center', padding: '0 16px', gap: 8, borderRight: '1px solid #e5e0d5' }}>
@@ -326,7 +372,7 @@ export function SearchPage() {
 
         {/* Map view */}
         {searched && !loading && view === 'map' && results.length > 0 && (
-          <BusinessMap businesses={results} />
+          <BusinessMap businesses={results} center={userLocation ?? undefined} />
         )}
 
         {/* Results */}
@@ -407,6 +453,7 @@ export function SearchPage() {
 
       <style>{`
         @keyframes pulse { 0%,100%{opacity:0.6} 50%{opacity:0.3} }
+        @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
       `}</style>
     </div>
   )

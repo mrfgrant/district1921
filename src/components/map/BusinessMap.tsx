@@ -10,7 +10,7 @@ interface MapBusiness {
 
 export function BusinessMap({ businesses, center }: {
   businesses: MapBusiness[]
-  center?: { lat: number; lng: number }
+  center?: { lat: number; lng: number; city?: string; state?: string }
 }) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
@@ -56,6 +56,25 @@ export function BusinessMap({ businesses, center }: {
     if (!plotted.length) return
 
     const bounds = new google.maps.LatLngBounds()
+
+    // User location marker
+    if (center?.lat && center?.lng) {
+      const userMarker = new google.maps.Marker({
+        position: { lat: center.lat, lng: center.lng },
+        map: mapInstanceRef.current,
+        title: 'Your location',
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 8,
+          fillColor: '#4285F4',
+          fillOpacity: 1,
+          strokeColor: '#fff',
+          strokeWeight: 2,
+        },
+        zIndex: 10,
+      })
+      markersRef.current.push(userMarker)
+    }
 
     plotted.forEach(biz => {
       const isPro = biz.subscription_status === 'active'
@@ -109,6 +128,11 @@ export function BusinessMap({ businesses, center }: {
           </div>
         ))}
       </div>
+      {center?.city && (
+        <div style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', background: '#1a3a2a', color: '#fff', padding: '5px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, boxShadow: '0 2px 8px rgba(0,0,0,0.2)', whiteSpace: 'nowrap', pointerEvents: 'none' }}>
+          📍 {center.city}{center.state ? `, ${center.state}` : ''}
+        </div>
+      )}
       {businesses.length > 0 && plottedCount === 0 && mapsReady && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(250,247,240,0.85)' }}>
           <p style={{ fontSize: 13, color: '#6b7280' }}>No map coordinates yet for these results.</p>
