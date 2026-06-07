@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { CATEGORY_LABELS, BusinessCategory } from '@/types'
 
-/* ─── Category icon map — SVG paths, no emoji ────────────────── */
+/* --- Category icon map — SVG paths, no emoji ------------------ */
 function CategoryIcon({ category, size = 14 }: { category: string; size?: number }) {
   const paths: Record<string, string> = {
     'food-dining':           'M18 8h1a4 4 0 0 1 0 8h-1 M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z M6 1v3 M10 1v3 M14 1v3',
@@ -39,7 +39,7 @@ function CategoryIcon({ category, size = 14 }: { category: string; size?: number
   )
 }
 
-/* ─── Helpers ────────────────────────────────────────────────── */
+/* /*  Helpers  */ */
 function isOpen(hours: any): boolean | null {
   if (!hours) return null
   const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday']
@@ -53,7 +53,7 @@ function isOpen(hours: any): boolean | null {
   return cur >= oh * 60 + om && cur < ch * 60 + cm
 }
 
-/* ─── Types ──────────────────────────────────────────────────── */
+/* /*  Types  */ */
 interface Business {
   id: string; name: string; slug: string; category: string
   city: string; state: string; address: string | null
@@ -64,7 +64,7 @@ interface Business {
   lat?: number; lng?: number
 }
 
-/* ─── BusinessCard ───────────────────────────────────────────── */
+/* /*  BusinessCard  */ */
 function BusinessCard({ biz, index }: { biz: Business; index: number }) {
   const openStatus = isOpen(biz.hours)
   const isPro      = biz.subscription_status === 'active'
@@ -123,7 +123,7 @@ function BusinessCard({ biz, index }: { biz: Business; index: number }) {
           </div>
         )}
 
-        {/* Logo */}
+        {/* /* Logo */ */}
         <div style={{
           width: 52, height: 52,
           borderRadius: 'var(--radius-md)',
@@ -138,7 +138,7 @@ function BusinessCard({ biz, index }: { biz: Business; index: number }) {
           {!biz.logo_url && logoInitial}
         </div>
 
-        {/* Info */}
+        {/* /* Info */ */}
         <div style={{ minWidth: 0 }}>
           {/* Name + Shield badge */}
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, marginBottom: 3, flexWrap: 'wrap' }}>
@@ -170,7 +170,7 @@ function BusinessCard({ biz, index }: { biz: Business; index: number }) {
             )}
           </div>
 
-          {/* Category */}
+          {/* /* Category */ */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: 5,
             fontSize: 11, fontWeight: 600,
@@ -182,7 +182,7 @@ function BusinessCard({ biz, index }: { biz: Business; index: number }) {
             {CATEGORY_LABELS[biz.category as BusinessCategory] ?? biz.category}
           </div>
 
-          {/* Meta row */}
+          {/* /* Meta row */ */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: 'var(--ink-soft)', flexWrap: 'wrap', marginBottom: 5 }}>
             {biz.rating_avg && biz.rating_count > 0 && (
               <>
@@ -197,7 +197,7 @@ function BusinessCard({ biz, index }: { biz: Business; index: number }) {
             )}
             <span>{biz.city}, {biz.state}</span>
 
-            {/* Service area badges */}
+            {/* /* Service area badges */ */}
             {biz.is_mobile_service && (
               <span style={{ background: 'rgba(94,160,220,0.12)', color: '#6ab0e8', padding: '1px 6px', borderRadius: 3, fontSize: 10, fontWeight: 600 }}>Mobile</span>
             )}
@@ -227,7 +227,7 @@ function BusinessCard({ biz, index }: { biz: Business; index: number }) {
             )}
           </div>
 
-          {/* Description */}
+          {/* /* Description */ */}
           {biz.description && (
             <p style={{
               fontSize: 12, color: 'var(--ink-soft)',
@@ -244,7 +244,7 @@ function BusinessCard({ biz, index }: { biz: Business; index: number }) {
   )
 }
 
-/* ─── Skeleton card ──────────────────────────────────────────── */
+/* /*  Skeleton card  */ */
 function SkeletonCard() {
   return (
     <div style={{
@@ -264,7 +264,7 @@ function SkeletonCard() {
   )
 }
 
-/* ─── Filter chip ────────────────────────────────────────────── */
+/* /*  Filter chip  */ */
 function FilterChip({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick} style={{
@@ -290,7 +290,7 @@ function FilterChip({ active, label, onClick }: { active: boolean; label: string
   )
 }
 
-/* ─── Main page ──────────────────────────────────────────────── */
+/* /*  Main page  */ */
 export function SearchPage() {
   const router       = useRouter()
   const searchParams = useSearchParams()
@@ -430,11 +430,11 @@ export function SearchPage() {
     if (searched) doSearch({ q, city, state, category: next, shield, openNow, mobile })
   }
 
-  /* ─── Render ─────────────────────────────────────────────── */
+  /* /*  Render  */ */
   return (
     <div style={{ minHeight: '100dvh', background: 'var(--surface)', fontFamily: 'var(--font-body)' }}>
 
-      {/* Search hero */}
+      {/* /* Search hero */ */}
       <div style={{
         background: 'var(--forest-mid)',
         borderBottom: '1px solid var(--rule-mid)',
@@ -442,7 +442,7 @@ export function SearchPage() {
       }}>
         <div style={{ maxWidth: 920, margin: '0 auto' }}>
 
-          {/* Eyebrow */}
+          {/* /* Eyebrow */ */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
             <div style={{ width: 22, height: 1, background: 'var(--gold)', opacity: 0.75 }} />
             <span style={{
@@ -464,7 +464,7 @@ export function SearchPage() {
             </div>
           )}
 
-          {/* Search bar */}
+          {/* /* Search bar */ */}
           <form onSubmit={handleSearch} role="search">
             <div style={{
               display: 'flex',
@@ -474,7 +474,7 @@ export function SearchPage() {
               border: '1px solid var(--rule-mid)',
               marginBottom: 14,
             }}>
-              {/* Keyword */}
+              {/* /* Keyword */ */}
               <div style={{ flex: 2, display: 'flex', alignItems: 'center', padding: '0 14px', gap: 8, borderRight: '1px solid var(--rule)' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: 'var(--ink-mid)', flexShrink: 0 }} aria-hidden="true">
                   <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -493,7 +493,7 @@ export function SearchPage() {
                   }}
                 />
               </div>
-              {/* City */
+              {/* /* City */ */
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '0 12px', gap: 8, borderRight: '1px solid var(--rule)', minWidth: 0 }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: 'var(--ink-mid)', flexShrink: 0 }} aria-hidden="true">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
@@ -512,7 +512,7 @@ export function SearchPage() {
                   }}
                 />
               </div>
-              {/* State */}
+              {/* /* State */ */}
               <select
                 value={state}
                 onChange={e => setState(e.target.value)}
@@ -531,7 +531,7 @@ export function SearchPage() {
                   <option key={s} value={s}>{s}</option>
                 ))}
               </select>
-              {/* Submit */}
+              {/* /* Submit */ */}
               <button
                 type="submit"
                 style={{
@@ -553,7 +553,7 @@ export function SearchPage() {
             </div>
           </form>
 
-          {/* Category pills */}
+          {/* /* Category pills */ */}
           <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }} role="group" aria-label="Browse by category">
             {(Object.entries(CATEGORY_LABELS) as [BusinessCategory, string][]).map(([key, label]) => (
               <button key={key} type="button" onClick={() => selectCategory(key)} style={{
@@ -581,7 +581,7 @@ export function SearchPage() {
         </div>
       </div>
 
-      {/* Results area */}
+      {/* /* Results area */ */}
       <div style={{ maxWidth: 920, margin: '0 auto', padding: '24px 24px 48px' }}>
 
         {/* Filter chips + result count */}
@@ -601,7 +601,7 @@ export function SearchPage() {
           </div>
         </div>
 
-        {/* View toggle */}
+        {/* /* View toggle */ */}
         {searched && !loading && results.length > 0 && (
           <div style={{ display: 'flex', gap: 2, background: 'var(--surface-card)', border: '1px solid var(--rule-soft)', borderRadius: 'var(--radius-md)', padding: 3, width: 'fit-content', marginBottom: 16 }}
             role="group" aria-label="View mode">
@@ -620,19 +620,19 @@ export function SearchPage() {
           </div>
         )}
 
-        {/* Map */}
+        {/* /* Map */ */}
         {searched && !loading && view === 'map' && results.length > 0 && (
           <BusinessMap businesses={results} center={mapCenter ?? userLocation ?? undefined} />
         )}
 
-        {/* Loading skeletons */}
+        {/* /* Loading skeletons */ */}
         {loading && (
           <div aria-label="Loading results" aria-busy="true">
             {[1,2,3,4,5].map(i => <SkeletonCard key={i} />)}
           </div>
         )}
 
-        {/* Empty state */}
+        {/* /* Empty state */ */}
         {!loading && searched && results.length === 0 && (
           <div style={{ textAlign: 'center', padding: '72px 0' }}>
             <div style={{
@@ -671,7 +671,7 @@ export function SearchPage() {
           </div>
         )}
 
-        {/* Results */}
+        {/* /* Results */ */}
         {!loading && results.length > 0 && (
           <>
             <div role="list" aria-label="Search results">
@@ -682,14 +682,14 @@ export function SearchPage() {
               ))}
             </div>
 
-            {/* Search banner ad after 4th result */}
+            {/* /* Search banner ad after 4th result */ */}
             {results.length >= 4 && (
               <div style={{ margin: '8px 0' }}>
                 <AdSlot placement="search_banner" city={city} state={state} />
               </div>
             )}
 
-            {/* Load more */}
+            {/* /* Load more */ */}
             {results.length < count && (
               <div style={{ textAlign: 'center', marginTop: 24 }}>
                 <button
@@ -728,7 +728,7 @@ export function SearchPage() {
               </div>
             )}
 
-            {/* Add a business CTA */}
+            {/* /* Add a business CTA */ */}
             <div style={{
               background: 'var(--forest)',
               border: '1px solid var(--forest-mid)',
