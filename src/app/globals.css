@@ -2,82 +2,71 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─────────────────────────────────────────────────────────────────
-   FONTS
-   Self-hosted Geist is already in /app/fonts/. Google Fonts used
-   for Cormorant (display) + Syne (UI) — swap for next/font in prod.
-───────────────────────────────────────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=Syne:wght@400;500;600;700&family=Syne+Mono&display=swap');
 
-/* ─────────────────────────────────────────────────────────────────
-   DESIGN TOKENS
-───────────────────────────────────────────────────────────────── */
+/* ─── TOKENS ─────────────────────────────────────────────────── */
 :root {
-  /* Brand — Forest + Gold */
-  --forest:          #0d2118;
-  --forest-mid:      #152e1e;
-  --forest-light:    #1e4d31;
-  --leaf:            #1c5735;
-  --sage:            #3a7550;
-  --sage-light:      #4f8f66;
+  /* Brand greens */
+  --forest:        #0d2118;
+  --forest-mid:    #152e1e;
+  --forest-light:  #1e4d31;
+  --leaf:          #1c5735;
+  --sage:          #3a7550;
+  --sage-light:    #4f8f66;
 
-  --gold:            #c5923a;
-  --gold-warm:       #d4a84e;
-  --gold-pale:       #f0ddb5;
-  --gold-faint:      #2a2210;   /* dark-mode gold tint for surfaces */
+  /* Gold */
+  --gold:          #c5923a;
+  --gold-warm:     #d4a84e;
+  --gold-pale:     #f0ddb5;
+  --gold-faint:    #fdf6e8;   /* light-mode gold tint */
 
-  /* Ink — dark mode text scale */
-  --ink:             #f0ede8;          /* primary text on dark */
-  --ink-soft:        #c8c4bc;          /* secondary text */
-  --ink-mid:         #8a8680;          /* tertiary / placeholders */
-  --ink-muted:       #5e5c58;          /* disabled / very muted */
+  /* Light-mode ink */
+  --ink:           #0f1a14;
+  --ink-soft:      #2d3d34;
+  --ink-mid:       #516058;
+  --ink-muted:     #7a8f82;
 
-  /* Surfaces */
-  --surface:         #0d2118;          /* page bg = forest (full dark) */
-  --surface-1:       #152e1e;          /* card / header */
-  --surface-2:       #1a3825;          /* elevated card */
-  --surface-3:       #203f2b;          /* highest elevation */
+  /* Light-mode surfaces — the results area */
+  --surface:       #f5f4f1;   /* page bg: warm off-white, zero chroma creep */
+  --surface-card:  #ffffff;   /* cards */
+  --surface-hover: #f9f8f5;   /* card hover */
 
-  /* Rules & borders */
-  --rule:            rgba(255,255,255,0.08);
-  --rule-mid:        rgba(255,255,255,0.12);
-  --rule-strong:     rgba(255,255,255,0.18);
+  /* Rules */
+  --rule:          #e4e1da;
+  --rule-soft:     #ece9e2;
+  --rule-mid:      #d8d4cc;
 
   /* Status */
-  --open-text:       #5ecb8a;
-  --open-bg:         rgba(94,203,138,0.12);
-  --closed-text:     #e07070;
-  --closed-bg:       rgba(224,112,112,0.12);
+  --open-text:     #1a6138;
+  --open-bg:       #e6f2ec;
+  --closed-text:   #892020;
+  --closed-bg:     #faeaea;
 
   /* Gold Shield */
-  --shield-text:     var(--gold-warm);
-  --shield-bg:       var(--gold-faint);
-  --shield-border:   rgba(197,146,58,0.3);
+  --shield-text:   #8a6200;
+  --shield-bg:     #fdf3d8;
+  --shield-border: rgba(197,146,58,0.28);
 
   /* Typography */
-  --font-display:    'Cormorant Garamond', Georgia, serif;
-  --font-body:       'Syne', system-ui, sans-serif;
-  --font-mono:       'Syne Mono', 'Geist Mono', monospace;
+  --font-display:  'Cormorant Garamond', Georgia, serif;
+  --font-body:     'Syne', system-ui, sans-serif;
+  --font-mono:     'Syne Mono', monospace;
 
   /* Shape */
-  --radius:          5px;
-  --radius-md:       8px;
-  --radius-lg:       10px;
+  --radius:        5px;
+  --radius-md:     8px;
+  --radius-lg:     10px;
 
-  /* Easing — Emil Kowalski conventions */
-  --ease-out:        cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-in-out:     cubic-bezier(0.77, 0, 0.175, 1);
+  /* Easing */
+  --ease-out:      cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out:   cubic-bezier(0.77, 0, 0.175, 1);
 }
 
-/* ─────────────────────────────────────────────────────────────────
-   RESET & BASE
-───────────────────────────────────────────────────────────────── */
-*, *::before, *::after {
-  box-sizing: border-box;
-}
+/* ─── RESET ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
 
 html {
-  background-color: var(--forest);
+  background-color: var(--surface);
   color: var(--ink);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
@@ -86,21 +75,17 @@ html {
 
 body {
   min-height: 100dvh;
-  background-color: var(--forest);
+  background-color: var(--surface);
 }
 
-/* ─────────────────────────────────────────────────────────────────
-   FOCUS — keyboard nav must be visible and on-brand
-───────────────────────────────────────────────────────────────── */
+/* ─── FOCUS ──────────────────────────────────────────────────── */
 :focus-visible {
   outline: 2px solid var(--gold);
   outline-offset: 2px;
   border-radius: 2px;
 }
 
-/* ─────────────────────────────────────────────────────────────────
-   REDUCED MOTION — non-negotiable a11y
-───────────────────────────────────────────────────────────────── */
+/* ─── REDUCED MOTION ─────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -109,67 +94,49 @@ body {
   }
 }
 
-/* ─────────────────────────────────────────────────────────────────
-   SCROLLBAR
-───────────────────────────────────────────────────────────────── */
+/* ─── SCROLLBAR ──────────────────────────────────────────────── */
 ::-webkit-scrollbar          { width: 5px; }
-::-webkit-scrollbar-track    { background: var(--forest-mid); }
-::-webkit-scrollbar-thumb    { background: var(--rule-strong); border-radius: 3px; }
+::-webkit-scrollbar-track    { background: var(--rule-soft); }
+::-webkit-scrollbar-thumb    { background: var(--rule-mid); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--sage); }
 
-/* ─────────────────────────────────────────────────────────────────
-   GOLD SHIELD — single source of truth for the badge pulse
-   Intentional: rare/first-time visibility → animation is justified.
-   (Emil framework: rare events can have delight animations)
-───────────────────────────────────────────────────────────────── */
+/* ─── GOLD SHIELD PULSE ──────────────────────────────────────── */
 @keyframes shield-pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(197,146,58,0.35); }
   50%       { box-shadow: 0 0 0 6px rgba(197,146,58,0); }
 }
-
 .gold-shield-badge {
   animation: shield-pulse 2.4s var(--ease-in-out) infinite;
 }
 
-/* ─────────────────────────────────────────────────────────────────
-   SKELETON LOADER — shared pulse for loading states
-───────────────────────────────────────────────────────────────── */
+/* ─── SKELETON ───────────────────────────────────────────────── */
 @keyframes skeleton-pulse {
-  0%, 100% { opacity: 0.5; }
-  50%       { opacity: 0.25; }
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 0.3; }
 }
-
 .skeleton {
   animation: skeleton-pulse 1.6s var(--ease-in-out) infinite;
-  background: var(--surface-2);
+  background: var(--rule-soft);
   border-radius: var(--radius);
 }
 
-/* ─────────────────────────────────────────────────────────────────
-   SPIN — used for loading indicators
-───────────────────────────────────────────────────────────────── */
+/* ─── SPIN ───────────────────────────────────────────────────── */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
 
-/* ─────────────────────────────────────────────────────────────────
-   SLIDE-UP — staggered list entry
-───────────────────────────────────────────────────────────────── */
+/* ─── SLIDE-UP ENTRY ─────────────────────────────────────────── */
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(5px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
 .animate-slide-up {
   opacity: 0;
-  animation: slide-up 260ms var(--ease-out) forwards;
+  animation: slide-up 240ms var(--ease-out) forwards;
 }
 
-/* ─────────────────────────────────────────────────────────────────
-   TAILWIND LAYER OVERRIDES
-   Keep minimal — most styling is component-scoped.
-───────────────────────────────────────────────────────────────── */
+/* ─── TAILWIND BASE ──────────────────────────────────────────── */
 @layer base {
   a { color: inherit; }
   button { font-family: inherit; }

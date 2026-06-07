@@ -79,8 +79,8 @@ function BusinessCard({ biz, index }: { biz: Business; index: number }) {
       <div
         className="animate-slide-up"
         style={{
-          background: isPro && biz.gold_shield ? 'var(--gold-faint)' : 'var(--surface-2)',
-          border: `1px solid ${isPro && biz.gold_shield ? 'var(--shield-border)' : 'var(--rule)'}`,
+          background: isPro && biz.gold_shield ? 'var(--gold-faint)' : 'var(--surface-card)',
+          border: `1px solid ${isPro && biz.gold_shield ? 'var(--shield-border)' : 'var(--rule-soft)'}`,
           borderRadius: 'var(--radius-md)',
           padding: '16px 18px',
           display: 'grid',
@@ -95,14 +95,14 @@ function BusinessCard({ biz, index }: { biz: Business; index: number }) {
         }}
         onMouseEnter={e => {
           const el = e.currentTarget as HTMLDivElement
-          el.style.background = 'var(--surface-3)'
-          el.style.borderColor = isPro && biz.gold_shield ? 'rgba(197,146,58,0.55)' : 'var(--rule-strong)'
+          el.style.background = 'var(--surface-hover)'
+          el.style.borderColor = isPro && biz.gold_shield ? 'rgba(197,146,58,0.55)' : 'var(--rule-mid)'
           el.style.transform = 'translateY(-1px)'
         }}
         onMouseLeave={e => {
           const el = e.currentTarget as HTMLDivElement
-          el.style.background = isPro && biz.gold_shield ? 'var(--gold-faint)' : 'var(--surface-2)'
-          el.style.borderColor = isPro && biz.gold_shield ? 'var(--shield-border)' : 'var(--rule)'
+          el.style.background = isPro && biz.gold_shield ? 'var(--gold-faint)' : 'var(--surface-card)'
+          el.style.borderColor = isPro && biz.gold_shield ? 'var(--shield-border)' : 'var(--rule-soft)'
           el.style.transform = 'translateY(0)'
         }}
         onMouseDown={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0) scale(0.995)' }}
@@ -112,8 +112,8 @@ function BusinessCard({ biz, index }: { biz: Business; index: number }) {
         {isPro && (
           <div style={{
             position: 'absolute', top: -1, right: 14,
-            background: biz.gold_shield ? 'var(--gold)' : 'var(--surface-3)',
-            color: biz.gold_shield ? 'var(--forest)' : 'var(--ink-soft)',
+            background: biz.gold_shield ? 'var(--gold)' : 'var(--rule-soft)',
+            color: biz.gold_shield ? 'var(--forest)' : 'var(--ink-mid)',
             fontSize: 9, fontWeight: 800, fontFamily: 'var(--font-body)',
             padding: '2px 8px', letterSpacing: '0.06em',
             borderRadius: '0 0 4px 4px',
@@ -128,7 +128,7 @@ function BusinessCard({ biz, index }: { biz: Business; index: number }) {
           width: 52, height: 52,
           borderRadius: 'var(--radius-md)',
           flexShrink: 0,
-          background: biz.logo_url ? `url(${biz.logo_url}) center/cover no-repeat` : 'var(--surface-3)',
+          background: biz.logo_url ? `url(${biz.logo_url}) center/cover no-repeat` : 'var(--rule-soft)',
           border: '1px solid var(--rule)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontFamily: 'var(--font-display)',
@@ -183,7 +183,7 @@ function BusinessCard({ biz, index }: { biz: Business; index: number }) {
           </div>
 
           {/* Meta row */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: 'var(--ink-mid)', flexWrap: 'wrap', marginBottom: 5 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: 'var(--ink-soft)', flexWrap: 'wrap', marginBottom: 5 }}>
             {biz.rating_avg && biz.rating_count > 0 && (
               <>
                 <span style={{ color: 'var(--gold)', fontSize: 11, letterSpacing: 1 }}>
@@ -192,7 +192,7 @@ function BusinessCard({ biz, index }: { biz: Business; index: number }) {
                 <span style={{ color: 'var(--ink-soft)', fontWeight: 600 }}>
                   {Number(biz.rating_avg).toFixed(1)}
                 </span>
-                <span style={{ color: 'var(--rule-strong)' }}>·</span>
+                <span style={{ color: 'var(--rule-mid)' }}>·</span>
               </>
             )}
             <span>{biz.city}, {biz.state}</span>
@@ -214,7 +214,7 @@ function BusinessCard({ biz, index }: { biz: Business; index: number }) {
             {/* Open / Closed */}
             {openStatus !== null && (
               <>
-                <span style={{ color: 'var(--rule-strong)' }}>·</span>
+                <span style={{ color: 'var(--rule-mid)' }}>·</span>
                 <span style={{
                   background: openStatus ? 'var(--open-bg)' : 'var(--closed-bg)',
                   color: openStatus ? 'var(--open-text)' : 'var(--closed-text)',
@@ -230,7 +230,7 @@ function BusinessCard({ biz, index }: { biz: Business; index: number }) {
           {/* Description */}
           {biz.description && (
             <p style={{
-              fontSize: 12, color: 'var(--ink-mid)',
+              fontSize: 12, color: 'var(--ink-soft)',
               lineHeight: 1.58, margin: 0,
               display: '-webkit-box',
               WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
@@ -248,7 +248,7 @@ function BusinessCard({ biz, index }: { biz: Business; index: number }) {
 function SkeletonCard() {
   return (
     <div style={{
-      background: 'var(--surface-2)', border: '1px solid var(--rule)',
+      background: 'var(--surface-card)', border: '1px solid var(--rule-soft)',
       borderRadius: 'var(--radius-md)', padding: '16px 18px',
       display: 'grid', gridTemplateColumns: '52px 1fr', gap: 14,
       marginBottom: 8,
@@ -273,8 +273,8 @@ function FilterChip({ active, label, onClick }: { active: boolean; label: string
       fontSize: 12, fontWeight: 500,
       border: '1px solid',
       background: active ? 'var(--gold)' : 'transparent',
-      borderColor: active ? 'var(--gold)' : 'var(--rule-strong)',
-      color: active ? 'var(--forest)' : 'var(--ink-mid)',
+      borderColor: active ? 'var(--gold)' : 'var(--rule-mid)',
+      color: active ? 'var(--forest)' : 'var(--ink-soft)',
       cursor: 'pointer',
       fontFamily: 'var(--font-body)',
       letterSpacing: '0.01em', whiteSpace: 'nowrap',
@@ -432,7 +432,7 @@ export function SearchPage() {
 
   /* ─── Render ─────────────────────────────────────────────── */
   return (
-    <div style={{ minHeight: '100dvh', background: 'var(--forest)', fontFamily: 'var(--font-body)' }}>
+    <div style={{ minHeight: '100dvh', background: 'var(--surface)', fontFamily: 'var(--font-body)' }}>
 
       {/* Search hero */}
       <div style={{
@@ -455,7 +455,7 @@ export function SearchPage() {
           </div>
 
           {locating && (
-            <div style={{ fontSize: 12, color: 'var(--ink-mid)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 7 }}>
+            <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 7 }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
                 style={{ animation: 'spin 1s linear infinite', flexShrink: 0 }} aria-hidden="true">
                 <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
@@ -487,13 +487,13 @@ export function SearchPage() {
                   aria-label="Search businesses"
                   style={{
                     flex: 1, border: 'none', outline: 'none',
-                    fontSize: 14, color: 'var(--ink)',
+                    fontSize: 14, color: '#fff',
                     padding: '15px 0', background: 'transparent',
                     fontFamily: 'var(--font-body)',
                   }}
                 />
               </div>
-              {/* City */}
+              {/* City */
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '0 12px', gap: 8, borderRight: '1px solid var(--rule)', minWidth: 0 }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: 'var(--ink-mid)', flexShrink: 0 }} aria-hidden="true">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
@@ -506,7 +506,7 @@ export function SearchPage() {
                   aria-label="City"
                   style={{
                     flex: 1, border: 'none', outline: 'none',
-                    fontSize: 14, color: 'var(--ink)',
+                    fontSize: 14, color: '#fff',
                     padding: '15px 0', background: 'transparent',
                     fontFamily: 'var(--font-body)', minWidth: 0,
                   }}
@@ -521,7 +521,7 @@ export function SearchPage() {
                   padding: '0 12px', border: 'none',
                   borderRight: '1px solid var(--rule)',
                   outline: 'none', fontSize: 13,
-                  color: state ? 'var(--ink)' : 'var(--ink-mid)',
+                  color: state ? '#fff' : 'rgba(255,255,255,0.45)',
                   background: 'transparent', cursor: 'pointer',
                   fontFamily: 'var(--font-body)',
                 }}
@@ -589,7 +589,7 @@ export function SearchPage() {
           {searched && (
             <span style={{ fontSize: 13, color: 'var(--ink-mid)', marginRight: 4 }}>
               {loading ? 'Searching…' : (
-                <><strong style={{ color: 'var(--ink-soft)', fontWeight: 600 }}>{count.toLocaleString()}</strong> result{count !== 1 ? 's' : ''}</>
+                <><strong style={{ color: 'var(--ink)', fontWeight: 600 }}>{count.toLocaleString()}</strong> result{count !== 1 ? 's' : ''}</>
               )}
             </span>
           )}
@@ -603,7 +603,7 @@ export function SearchPage() {
 
         {/* View toggle */}
         {searched && !loading && results.length > 0 && (
-          <div style={{ display: 'flex', gap: 2, background: 'var(--surface-2)', border: '1px solid var(--rule)', borderRadius: 'var(--radius-md)', padding: 3, width: 'fit-content', marginBottom: 16 }}
+          <div style={{ display: 'flex', gap: 2, background: 'var(--surface-card)', border: '1px solid var(--rule-soft)', borderRadius: 'var(--radius-md)', padding: 3, width: 'fit-content', marginBottom: 16 }}
             role="group" aria-label="View mode">
             {(['list', 'map'] as const).map(v => (
               <button key={v} type="button" onClick={() => setView(v)} style={{
@@ -612,7 +612,7 @@ export function SearchPage() {
                 fontFamily: 'var(--font-body)',
                 transition: `background 130ms var(--ease-out), color 130ms var(--ease-out)`,
                 background: view === v ? 'var(--gold)' : 'transparent',
-                color: view === v ? 'var(--forest)' : 'var(--ink-mid)',
+                color: view === v ? 'var(--forest)' : 'var(--ink-soft)',
               }} aria-pressed={view === v}>
                 {v === 'list' ? 'List' : 'Map'}
               </button>
@@ -637,7 +637,7 @@ export function SearchPage() {
           <div style={{ textAlign: 'center', padding: '72px 0' }}>
             <div style={{
               width: 56, height: 56,
-              background: 'var(--surface-2)',
+              background: 'var(--surface-card)',
               border: '1px solid var(--rule)',
               borderRadius: '50%',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -711,14 +711,14 @@ export function SearchPage() {
                   style={{
                     padding: '11px 28px',
                     background: 'transparent',
-                    border: '1px solid var(--rule-strong)',
+                    border: '1px solid var(--rule)',
                     borderRadius: 'var(--radius-md)',
                     fontSize: 13, fontWeight: 600,
                     color: 'var(--ink-soft)', cursor: 'pointer',
                     fontFamily: 'var(--font-body)',
                     transition: `background 140ms var(--ease-out), color 140ms var(--ease-out), border-color 140ms var(--ease-out), transform 80ms var(--ease-out)`,
                   }}
-                  onMouseEnter={e => { (e.currentTarget).style.background = 'var(--surface-2)'; (e.currentTarget).style.color = 'var(--ink)'; (e.currentTarget).style.borderColor = 'var(--rule-strong)' }}
+                  onMouseEnter={e => { (e.currentTarget).style.background = 'var(--surface-hover)'; (e.currentTarget).style.color = 'var(--ink)'; (e.currentTarget).style.borderColor = 'var(--rule-mid)' }}
                   onMouseLeave={e => { (e.currentTarget).style.background = 'transparent'; (e.currentTarget).style.color = 'var(--ink-soft)'; (e.currentTarget).style.borderColor = 'var(--rule-strong)' }}
                   onMouseDown={e => { (e.currentTarget).style.transform = 'scale(0.98)' }}
                   onMouseUp={e => { (e.currentTarget).style.transform = 'scale(1)' }}
@@ -730,8 +730,8 @@ export function SearchPage() {
 
             {/* Add a business CTA */}
             <div style={{
-              background: 'var(--forest-light)',
-              border: '1px solid var(--rule-mid)',
+              background: 'var(--forest)',
+              border: '1px solid var(--forest-mid)',
               borderRadius: 'var(--radius-lg)',
               padding: '24px 28px', marginTop: 32,
               display: 'flex', alignItems: 'center',
