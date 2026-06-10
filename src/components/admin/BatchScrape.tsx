@@ -65,8 +65,8 @@ function StatusDot({ status }: { status: JobStatus }) {
 
 export function BatchScrape() {
   const [stage, setStage]             = useState<Stage>('config')
-  const [selCats, setSelCats]         = useState<Set<number>>(new Set([0,1,2,3,4,6,7,8,9,10,11]))
-  const [selMarkets, setSelMarkets]   = useState<Set<number>>(new Set([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]))
+  const [selCats, setSelCats]         = useState<number[]>([0,1,2,3,4,6,7,8,9,10,11])
+  const [selMarkets, setSelMarkets]   = useState<number[]>([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14])
   const [maxResults, setMaxResults]   = useState(100)
   const [jobs, setJobs]               = useState<Job[]>([])
   const [completed, setCompleted]     = useState(0)
@@ -76,8 +76,8 @@ export function BatchScrape() {
   const [error, setError]             = useState('')
   const abortRef = useRef<AbortController | null>(null)
 
-  const selectedCats    = CATEGORIES.filter((_, i) => selCats.has(i))
-  const selectedMarkets = MARKETS.filter((_, i) => selMarkets.has(i))
+  const selectedCats    = CATEGORIES.filter((_, i) => selCats.includes(i))
+  const selectedMarkets = MARKETS.filter((_, i) => selMarkets.includes(i))
   const totalJobs       = selectedCats.length * selectedMarkets.length
   const estCost         = (totalJobs * maxResults * 0.004).toFixed(2)
   const estResults      = totalJobs * maxResults
@@ -208,19 +208,15 @@ export function BatchScrape() {
             {/* Categories */}
             <div style={s.card}>
               <div style={s.head}>
-                <span>Categories ({selCats.size} selected)</span>
+                <span>Categories ({selCats.length} selected)</span>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button type="button" onClick={() => setSelCats(new Set(CATEGORIES.map((_,i)=>i)))} style={{ fontSize: 11, color: 'var(--color-gold)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)' }}>All</button>
-                  <button type="button" onClick={() => setSelCats(new Set())} style={{ fontSize: 11, color: 'var(--color-muted)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)' }}>None</button>
+                  <button type="button" onClick={() => setSelCats(CATEGORIES.map((_,i)=>i))} style={{ fontSize: 11, color: 'var(--color-gold)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)' }}>All</button>
+                  <button type="button" onClick={() => setSelCats([])} style={{ fontSize: 11, color: 'var(--color-muted)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)' }}>None</button>
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
                 {CATEGORIES.map((c, i) => (
-                  <CheckRow key={i} label={c.label} checked={selCats.has(i)} onChange={v => {
-                    const next = new Set(selCats)
-                    v ? next.add(i) : next.delete(i)
-                    setSelCats(next)
-                  }} />
+                  <CheckRow key={i} label={c.label} checked={selCats.includes(i)} onChange={v => setSelCats(v ? [...selCats, i] : selCats.filter(x => x !== i))} />
                 ))}
               </div>
             </div>
@@ -228,19 +224,15 @@ export function BatchScrape() {
             {/* Markets */}
             <div style={s.card}>
               <div style={s.head}>
-                <span>Markets ({selMarkets.size} selected)</span>
+                <span>Markets ({selMarkets.length} selected)</span>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button type="button" onClick={() => setSelMarkets(new Set(MARKETS.map((_,i)=>i)))} style={{ fontSize: 11, color: 'var(--color-gold)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)' }}>All</button>
-                  <button type="button" onClick={() => setSelMarkets(new Set())} style={{ fontSize: 11, color: 'var(--color-muted)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)' }}>None</button>
+                  <button type="button" onClick={() => setSelMarkets(MARKETS.map((_,i)=>i))} style={{ fontSize: 11, color: 'var(--color-gold)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)' }}>All</button>
+                  <button type="button" onClick={() => setSelMarkets([])} style={{ fontSize: 11, color: 'var(--color-muted)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)' }}>None</button>
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
                 {MARKETS.map((m, i) => (
-                  <CheckRow key={i} label={`${m.city}, ${m.state}`} checked={selMarkets.has(i)} onChange={v => {
-                    const next = new Set(selMarkets)
-                    v ? next.add(i) : next.delete(i)
-                    setSelMarkets(next)
-                  }} />
+                  <CheckRow key={i} label={`${m.city}, ${m.state}`} checked={selMarkets.includes(i)} onChange={v => setSelMarkets(v ? [...selMarkets, i] : selMarkets.filter(x => x !== i))} />
                 ))}
               </div>
             </div>
