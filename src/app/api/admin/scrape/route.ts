@@ -144,26 +144,39 @@ export async function POST(req: NextRequest) {
 
   const places: any[] = await runRes.json()
 
+  // Extract the state abbreviation from the query for geo-filtering
+  const queryStateMatch = query.match(/\b([A-Z]{2})\b(?=[^A-Z]|$)/) ??
+                          query.match(/in\s+\w+[,\s]+(\w+)\s*$/i)
+  const queryWords     = query.toLowerCase().split(/\s+/)
+  const STATE_ABBREVS  = new Set(['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC'])
+  const queryState     = queryWords.find(w => STATE_ABBREVS.has(w.toUpperCase()))?.toUpperCase() ?? null
+
   // Transform Apify results into PreviewRow format
   const rows = places
     .filter(p => p.title && p.city)
-    .map((p, i) => ({
-      _row: i + 1,
-      _categoryWarning: null,
-      name:        p.title?.trim() ?? '',
-      category:    mapCategory(p.categories ?? []),
-      address:     p.street ?? null,
-      city:        p.city ?? '',
-      state:       p.state === 'Georgia' ? 'GA' : abbrevState(p.state) ?? p.state ?? '',
-      zip:         p.postalCode ?? null,
-      phone:       normalizePhone(p.phoneUnformatted ?? p.phone),
-      website:     p.website ?? null,
-      email:       null,
-      description: null,
-      lat:         p.location?.lat ?? null,
-      lng:         p.location?.lng ?? null,
-      _hours:      p.openingHours ?? null,
-    }))
+    .map((p, i) => {
+      const stateAbbrev = abbrevState(p.state) ?? p.state ?? ''
+      const geoMismatch = queryState && stateAbbrev && stateAbbrev !== queryState
+      return {
+        _row: i + 1,
+        _categoryWarning: geoMismatch
+          ? `Location mismatch: result is in ${stateAbbrev}, query was for ${queryState}`
+          : null,
+        name:        p.title?.trim() ?? '',
+        category:    mapCategory(p.categories ?? []),
+        address:     p.street ?? null,
+        city:        p.city ?? '',
+        state:       stateAbbrev,
+        zip:         p.postalCode ?? null,
+        phone:       normalizePhone(p.phoneUnformatted ?? p.phone),
+        website:     p.website ?? null,
+        email:       null,
+        description: null,
+        lat:         p.location?.lat ?? null,
+        lng:         p.location?.lng ?? null,
+        _hours:      p.openingHours ?? null,
+      }
+    })
 
   return NextResponse.json({
     totalRows:   rows.length,

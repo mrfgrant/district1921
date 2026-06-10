@@ -147,6 +147,7 @@ export function ImportBusinesses() {
   const [importedAt, setImportedAt]     = useState('')
   const [rolling, setRolling]           = useState(false)
   const [rollbackDone, setRollbackDone] = useState(false)
+  const [excludeFlagged, setExcludeFlagged] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   // Update query when template/city/state changes
@@ -224,11 +225,11 @@ export function ImportBusinesses() {
   function reset() {
     setStage('idle'); setPreview(null); setResult(null); setFileName('')
     setError(''); setProgress(0); setFilterState('')
-    setImportedAt(''); setRolling(false); setRollbackDone(false)
+    setImportedAt(''); setRolling(false); setRollbackDone(false); setExcludeFlagged(false)
   }
 
-  const visibleRows   = preview ? (filterState ? preview.preview.filter(r => r.state === filterState) : preview.preview) : []
-  const allFiltered   = preview ? (filterState ? preview.allRows.filter(r => r.state === filterState) : preview.allRows) : []
+  const visibleRows   = preview ? (filterState ? preview.preview.filter(r => r.state === filterState) : preview.preview).filter(r => !excludeFlagged || !r._categoryWarning) : []
+  const allFiltered   = preview ? (filterState ? preview.allRows.filter(r => r.state === filterState) : preview.allRows).filter(r => !excludeFlagged || !r._categoryWarning) : []
   const uniqueStates  = preview ? [...new Set(preview.allRows.map(r => r.state))].sort() : []
   const stateCounts   = preview ? preview.allRows.reduce((a, r) => { a[r.state] = (a[r.state] ?? 0) + 1; return a }, {} as Record<string, number>) : {}
   const warnings      = preview?.preview.filter(r => r._categoryWarning).length ?? 0
@@ -393,7 +394,7 @@ export function ImportBusinesses() {
               { n: preview.totalRows,   l: 'Total results', c: 'var(--color-gold)' },
               { n: preview.validRows,   l: 'Valid',          c: '#3cb371' },
               { n: preview.skippedRows, l: 'Skipped',        c: preview.skippedRows > 0 ? '#e74c3c' : 'var(--color-muted)' },
-              { n: warnings,            l: 'Cat. warnings',  c: warnings > 0 ? 'var(--color-gold)' : 'var(--color-muted)' },
+              { n: warnings,            l: 'Flagged rows',    c: warnings > 0 ? '#e74c3c' : 'var(--color-muted)' },
             ].map(({ n, l, c }) => (
               <div key={l} style={css.stat}>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 700, color: c, lineHeight: 1 }}>{n}</div>
@@ -432,6 +433,12 @@ export function ImportBusinesses() {
               Skip geocoding
               {inputMode === 'scrape' && <span style={{ fontSize: 11, color: 'var(--color-muted)' }}>(coords already included)</span>}
             </label>
+            {warnings > 0 && (
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#e74c3c', cursor: 'pointer' }}>
+                <input type="checkbox" checked={excludeFlagged} onChange={e => setExcludeFlagged(e.target.checked)} />
+                Exclude {warnings} flagged row{warnings !== 1 ? 's' : ''}
+              </label>
+            )}
 
             <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
               <button style={{ ...css.btn, ...css.btnGhost }} onClick={reset} disabled={stage === 'importing'}>
@@ -481,7 +488,11 @@ export function ImportBusinesses() {
                       <td style={css.tdm}>{row._row}</td>
                       <td style={css.td}>
                         <span style={{ fontWeight: 500 }}>{row.name}</span>
-                        {row._categoryWarning && <div style={{ fontSize: 10, color: 'var(--color-gold)', marginTop: 2 }}>{row._categoryWarning}</div>}
+                        {row._categoryWarning && (
+                          <div style={{ fontSize: 10, color: row._categoryWarning.includes('mismatch') ? '#e74c3c' : 'var(--color-gold)', marginTop: 2 }}>
+                            {row._categoryWarning.includes('mismatch') ? '⚠ ' : ''}{row._categoryWarning}
+                          </div>
+                        )}
                       </td>
                       <td style={css.td}>
                         <span style={{ background: 'rgba(201,168,76,0.1)', color: 'var(--color-gold)', padding: '2px 7px', borderRadius: 3, fontSize: 11, fontWeight: 600 }}>
