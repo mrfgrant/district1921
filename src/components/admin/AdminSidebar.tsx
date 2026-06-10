@@ -14,6 +14,7 @@ const navItems = [
   { href: '/admin/ads', label: 'Ad Approvals', roles: ['admin'] },
   { href: '/admin/categories', label: 'Categories', roles: ['admin'] },
   { href: '/admin/users', label: 'Users', roles: ['admin'] },
+  { href: '/admin/import', label: 'Import Businesses', roles: ['admin'] },
 ]
 
 export function AdminSidebar({ role }: { role: UserRole }) {
