@@ -9,24 +9,52 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        gold: {
-          DEFAULT: '#C9A84C',
-          light: '#E8C87A',
-          dark: '#9A7A2E',
+        forest: {
+          DEFAULT: '#0d2118',
+          mid:     '#152e1e',
+          light:   '#1e4d31',
         },
-        midnight: '#0A0A0F',
-        charcoal: '#141418',
-        surface: '#1C1C23',
-        'brand-border': '#2A2A35',
-        muted: '#6B6B80',
+        leaf:  '#1c5735',
+        sage: {
+          DEFAULT: '#3a7550',
+          light:   '#4f8f66',
+        },
+        gold: {
+          DEFAULT: '#c5923a',
+          warm:    '#d4a84e',
+          pale:    '#f0ddb5',
+          faint:   '#fdf6e8',
+        },
+        surface: {
+          DEFAULT: '#f5f4f1',
+          card:    '#ffffff',
+          hover:   '#f9f8f5',
+        },
+        ink: {
+          DEFAULT: '#0f1a14',
+          soft:    '#2d3d34',
+          mid:     '#516058',
+          muted:   '#7a8f82',
+        },
+        rule: {
+          DEFAULT: '#e4e1da',
+          soft:    '#ece9e2',
+          mid:     '#d8d4cc',
+        },
       },
       fontFamily: {
-        display: ['Playfair Display', 'Georgia', 'serif'],
-        body: ['IBM Plex Sans', 'system-ui', 'sans-serif'],
+        display: ['Cormorant Garamond', 'Georgia', 'serif'],
+        body:    ['Syne', 'system-ui', 'sans-serif'],
+        mono:    ['Syne Mono', 'monospace'],
       },
       borderRadius: {
-        DEFAULT: '6px',
-        lg: '12px',
+        DEFAULT: '5px',
+        md:      '8px',
+        lg:      '10px',
+      },
+      transitionTimingFunction: {
+        'ease-out-strong':    'cubic-bezier(0.23, 1, 0.32, 1)',
+        'ease-in-out-strong': 'cubic-bezier(0.77, 0, 0.175, 1)',
       },
     },
   },
