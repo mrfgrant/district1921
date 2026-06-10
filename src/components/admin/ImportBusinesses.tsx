@@ -22,16 +22,79 @@ type InputMode = 'csv' | 'scrape'
 type Stage = 'idle' | 'parsing' | 'scraping' | 'preview' | 'importing' | 'done'
 
 const QUERY_TEMPLATES = [
+  // Food & Dining
   'black owned restaurants in {city} {state}',
+  'black owned soul food in {city} {state}',
+  'black owned bakery in {city} {state}',
+  'black owned catering in {city} {state}',
+  'black owned food truck in {city} {state}',
+  // Beauty & Wellness
   'black owned barbershops in {city} {state}',
   'black owned salons in {city} {state}',
-  'black owned attorneys in {city} {state}',
-  'black owned contractors in {city} {state}',
-  'black owned gyms in {city} {state}',
-  'black owned boutiques in {city} {state}',
+  'black owned nail salon in {city} {state}',
+  'black owned beauty supply in {city} {state}',
+  'black owned spa in {city} {state}',
+  'black owned esthetician in {city} {state}',
+  'black owned facial in {city} {state}',
+  'black owned lashes in {city} {state}',
+  'black owned braids in {city} {state}',
+  // Health & Medical
   'black owned dentists in {city} {state}',
+  'black owned mental health in {city} {state}',
+  'black owned physical therapy in {city} {state}',
+  'black owned chiropractor in {city} {state}',
+  'black owned pharmacy in {city} {state}',
+  // Legal & Financial
+  'black owned attorneys in {city} {state}',
+  'black owned accounting in {city} {state}',
+  'black owned tax preparation in {city} {state}',
+  'black owned insurance in {city} {state}',
+  'black owned mortgage in {city} {state}',
   'black owned financial advisors in {city} {state}',
+  'black owned credit union in {city} {state}',
+  // Home & Construction
+  'black owned contractors in {city} {state}',
+  'black owned plumber in {city} {state}',
+  'black owned electrician in {city} {state}',
+  'black owned cleaning service in {city} {state}',
+  'black owned landscaping in {city} {state}',
+  'black owned moving company in {city} {state}',
+  'black owned roofing in {city} {state}',
+  'black owned hvac in {city} {state}',
+  // Automotive
+  'black owned auto repair in {city} {state}',
+  'black owned car wash in {city} {state}',
+  'black owned auto detailing in {city} {state}',
+  // Professional Services
+  'black owned photography in {city} {state}',
+  'black owned event planning in {city} {state}',
+  'black owned marketing agency in {city} {state}',
+  'black owned printing in {city} {state}',
+  // Education & Childcare
+  'black owned daycare in {city} {state}',
+  'black owned tutoring in {city} {state}',
+  // Retail & Products
+  'black owned boutiques in {city} {state}',
+  'black owned clothing store in {city} {state}',
+  'black owned bookstore in {city} {state}',
+  'black owned jewelry in {city} {state}',
+  'black owned florist in {city} {state}',
+  // Faith & Community
+  'black owned church in {city} {state}',
+  'black nonprofit in {city} {state}',
+  // Real Estate
   'black owned real estate in {city} {state}',
+  // Entertainment & Travel
+  'black owned gym in {city} {state}',
+  'black owned yoga studio in {city} {state}',
+  'black owned dance studio in {city} {state}',
+  'black owned hotel in {city} {state}',
+  'black owned travel agency in {city} {state}',
+  // Tech
+  'black owned tech in {city} {state}',
+  'black owned IT services in {city} {state}',
+  // Veteran
+  'black veteran owned business in {city} {state}',
 ]
 
 const TOP_MARKETS = [
