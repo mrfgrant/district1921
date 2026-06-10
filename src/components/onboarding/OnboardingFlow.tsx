@@ -143,7 +143,7 @@ export function OnboardingFlow({ userId, userEmail, isAdmin }: {
   const S: React.CSSProperties = { fontFamily: "'Playfair Display', serif" }
 
   return (
-    <div className="min-h-screen bg-[#faf7f0]">
+    <div style={{ minHeight:"100dvh", background:"var(--surface)" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600&display=swap');
         .ob,.ob *{box-sizing:border-box;font-family:'DM Sans',sans-serif}
@@ -191,17 +191,18 @@ export function OnboardingFlow({ userId, userEmail, isAdmin }: {
 
       <div className="ob">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-[#1a3a2a]">
+        <div style={{ position:"sticky", top:0, zIndex:10, background:"var(--forest-mid)", borderBottom:"1px solid var(--rule-mid)" }}>
           <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
-            <span style={{...S, fontSize:'20px', fontWeight:900, color:'#fff'}}>
-              District <span style={{color:'#c9a84c'}}>1921</span>
+            <span style={{ display:'flex', alignItems:'baseline', gap:0 }}>
+              <span style={{ fontFamily:'var(--font-display)', fontSize:20, fontWeight:700, color:'#fff', letterSpacing:'-0.015em' }}>District</span>
+              <span style={{ fontFamily:'var(--font-mono)', fontSize:11, color:'var(--gold)', letterSpacing:'0.08em', marginLeft:6, position:'relative', top:-1 }}>1921</span>
             </span>
             <span className="text-sm text-white/60">Set up your business</span>
           </div>
         </div>
 
         {/* Progress */}
-        <div className="bg-white border-b border-[#e5e0d5]">
+        <div style={{ background:"var(--surface-card)", borderBottom:"1px solid var(--rule)" }}>
           <div className="max-w-2xl mx-auto px-4 py-4">
             <div className="flex items-center">
               {STEPS.map((s, i) => (
