@@ -144,12 +144,20 @@ export async function POST(req: NextRequest) {
 
   const places: any[] = await runRes.json()
 
-  // Extract the state abbreviation from the query for geo-filtering
-  const queryStateMatch = query.match(/\b([A-Z]{2})\b(?=[^A-Z]|$)/) ??
-                          query.match(/in\s+\w+[,\s]+(\w+)\s*$/i)
-  const queryWords     = query.toLowerCase().split(/\s+/)
+  // Extract state abbreviation — last uppercase 2-letter word in the query
+  // Explicitly exclude common English words that are valid state codes (IN, OR, ME, OK, etc.)
+  const NOT_STATES     = new Set(['IN','OR','ME','OK','AS','IS','IT','AT','BE','DO','GO','HI','IF','MY','NO','OF','OH','ON','SO','TO','UP','US','WE'])
   const STATE_ABBREVS  = new Set(['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC'])
-  const queryState     = queryWords.find(w => STATE_ABBREVS.has(w.toUpperCase()))?.toUpperCase() ?? null
+  // Look for state at end of query: "... in Atlanta GA" -> take the last token that is a valid state
+  const queryTokens    = query.trim().split(/\s+/)
+  const lastToken      = queryTokens[queryTokens.length - 1]?.toUpperCase()
+  const secondLast     = queryTokens[queryTokens.length - 2]?.toUpperCase()
+  // Prefer the last token if it's a clean state abbrev, else second-to-last
+  const queryState     = (lastToken && STATE_ABBREVS.has(lastToken) && !NOT_STATES.has(lastToken))
+    ? lastToken
+    : (secondLast && STATE_ABBREVS.has(secondLast) && !NOT_STATES.has(secondLast))
+    ? secondLast
+    : null
 
   // Transform Apify results into PreviewRow format
   const rows = places
