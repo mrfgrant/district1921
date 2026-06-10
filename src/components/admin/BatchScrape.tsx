@@ -124,7 +124,14 @@ export function BatchScrape() {
 
         if (!res.ok) {
           const d = await res.json().catch(() => ({}))
-          setJobs(prev => prev.map((j, idx) => idx === i ? { ...j, status: 'error', error: d.error ?? `HTTP ${res.status}` } : j))
+          const errMsg = d.error ?? `HTTP ${res.status}`
+          setJobs(prev => prev.map((j, idx) => idx === i ? { ...j, status: 'error', error: errMsg } : j))
+          // If Apify token missing, stop entire batch — no point continuing
+          if (errMsg.includes('APIFY_API_TOKEN')) {
+            setError('APIFY_API_TOKEN is not configured. Add it in Vercel → Settings → Environment Variables, then redeploy.')
+            setStage('config')
+            return
+          }
         } else {
           const data = await res.json()
           const rows = data.rows ?? []
