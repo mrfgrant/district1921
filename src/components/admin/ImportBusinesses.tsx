@@ -74,6 +74,9 @@ export function ImportBusinesses() {
   const [progress, setProgress]         = useState(0)
   const [progressMsg, setProgressMsg]   = useState('')
   const [result, setResult]             = useState<CommitResult | null>(null)
+  const [importedAt, setImportedAt]       = useState<string>('')
+  const [rolling, setRolling]             = useState(false)
+  const [rollbackDone, setRollbackDone]   = useState(false)
   const [filterState, setFilterState]   = useState('')
   const [error, setError]               = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
@@ -142,6 +145,7 @@ export function ImportBusinesses() {
       setProgress(95)
       if (!res.ok) { setError('Import failed.'); setStage('preview'); return }
       const data: CommitResult = await res.json()
+      setImportedAt(new Date().toISOString())
       setResult(data)
       setProgress(100)
       setStage('done')
@@ -155,6 +159,26 @@ export function ImportBusinesses() {
     setStage('idle'); setPreview(null); setResult(null)
     setFileName(''); setCsvText(''); setError('')
     setProgress(0); setFilterState('')
+    setImportedAt(''); setRolling(false); setRollbackDone(false)
+  }
+
+  const handleRollback = async () => {
+    if (!importedAt) return
+    setRolling(true)
+    try {
+      const res = await fetch('/api/admin/import/rollback', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ importedAt }),
+      })
+      const data = await res.json()
+      if (res.ok) setRollbackDone(true)
+      else setError(data.error ?? 'Rollback failed')
+    } catch {
+      setError('Network error during rollback')
+    } finally {
+      setRolling(false)
+    }
   }
 
   const visibleRows = preview
@@ -409,6 +433,40 @@ export function ImportBusinesses() {
             </div>
           )}
 
+          {rollbackDone ? (
+            <div style={{ background: 'rgba(192,57,43,0.08)', border: '1px solid rgba(192,57,43,0.2)', borderRadius: 6, padding: '12px 20px', marginBottom: 20, fontSize: 13, color: '#e74c3c', fontWeight: 600 }}>
+              Import rolled back. All inserted businesses have been removed.
+            </div>
+          ) : (
+            <div style={{ marginBottom: 20 }}>
+              <button
+                onClick={handleRollback}
+                disabled={rolling}
+                style={{ ...s.btn, ...s.btnDanger, opacity: rolling ? 0.7 : 1 }}
+                onMouseDown={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.97)' }}
+                onMouseUp={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)' }}
+              >
+                {rolling ? (
+                  <>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}>
+                      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                    </svg>
+                    Rolling back...
+                  </>
+                ) : (
+                  <>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.33"/>
+                    </svg>
+                    Undo this import
+                  </>
+                )}
+              </button>
+              <div style={{ fontSize: 11, color: 'var(--color-muted)', marginTop: 6 }}>
+                Removes all {result?.inserted} businesses just imported. Only works within this session.
+              </div>
+            </div>
+          )}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
             <button style={{ ...s.btn, ...s.btnPrimary }} onClick={reset}
               onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#b8943e' }}
