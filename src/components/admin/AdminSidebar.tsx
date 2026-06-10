@@ -15,6 +15,7 @@ const navItems = [
   { href: '/admin/categories', label: 'Categories', roles: ['admin'] },
   { href: '/admin/users', label: 'Users', roles: ['admin'] },
   { href: '/admin/import', label: 'Import Businesses', roles: ['admin'] },
+  { href: '/admin/batch-scrape', label: 'Batch Scrape', roles: ['admin'] },
 ]
 
 export function AdminSidebar({ role }: { role: UserRole }) {
