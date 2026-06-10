@@ -103,60 +103,66 @@ export function BatchScrape() {
     setCompleted(0); setTotalFound(0); setTotalDeduped(0); setCsvData(''); setError('')
 
     abortRef.current = new AbortController()
+    const allRows: any[] = []
 
-    try {
-      const res = await fetch('/api/admin/batch-scrape', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jobs: jobList.map(j => ({ query: j.query, city: j.city, state: j.state })), maxResults }),
-        signal: abortRef.current.signal,
-      })
+    for (let i = 0; i < jobList.length; i++) {
+      // Check if aborted
+      if (abortRef.current.signal.aborted) break
 
-      if (!res.ok) { setError('Failed to start scrape.'); setStage('config'); return }
+      const job = jobList[i]
 
-      const reader  = res.body!.getReader()
-      const decoder = new TextDecoder()
-      let buffer    = ''
+      // Mark current job as running
+      setJobs(prev => prev.map((j, idx) => idx === i ? { ...j, status: 'running' } : j))
 
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop() ?? ''
+      try {
+        const res = await fetch('/api/admin/batch-scrape', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: job.query, city: job.city, state: job.state, maxResults }),
+          signal: abortRef.current.signal,
+        })
 
-        for (const line of lines) {
-          if (!line.trim()) continue
-          try {
-            const msg = JSON.parse(line)
-
-            if (msg.type === 'progress') {
-              setCompleted(msg.completed)
-              setTotalFound(msg.totalFound ?? 0)
-              setJobs(prev => prev.map(j =>
-                j.query === msg.query
-                  ? { ...j, status: msg.status as JobStatus, found: msg.found, error: msg.error }
-                  : j
-              ))
-            }
-
-            if (msg.type === 'done') {
-              setTotalDeduped(msg.totalDeduped)
-              setCsvData(msg.csv)
-              setStage('done')
-            }
-          } catch {}
+        if (!res.ok) {
+          const d = await res.json().catch(() => ({}))
+          setJobs(prev => prev.map((j, idx) => idx === i ? { ...j, status: 'error', error: d.error ?? `HTTP ${res.status}` } : j))
+        } else {
+          const data = await res.json()
+          const rows = data.rows ?? []
+          allRows.push(...rows)
+          setJobs(prev => prev.map((j, idx) => idx === i ? { ...j, status: 'done', found: rows.length } : j))
+          setTotalFound(allRows.length)
         }
+      } catch (e: any) {
+        if (e.name === 'AbortError') break
+        setJobs(prev => prev.map((j, idx) => idx === i ? { ...j, status: 'error', error: e.message } : j))
       }
-    } catch (e: any) {
-      if (e.name !== 'AbortError') setError(e.message)
-      setStage('config')
+
+      setCompleted(i + 1)
     }
+
+    // Deduplicate by phone, then build CSV
+    const seen    = new Set<string>()
+    const deduped = allRows.filter(r => {
+      const key = r.phone || `${r.name}|${r.city}|${r.state}`
+      if (seen.has(key)) return false
+      seen.add(key); return true
+    })
+
+    setTotalDeduped(deduped.length)
+    setCsvData(buildCSV(deduped))
+    setStage('done')
+  }
+
+  function buildCSV(rows: any[]): string {
+    const headers = ['name','category','address','city','state','zip','phone','website','lat','lng','source','geo_match']
+    const escape  = (v: any) => `"${String(v ?? '').replace(/"/g, '""')}"`
+    return [headers.join(','), ...rows.map(r => headers.map(h => escape(r[h])).join(','))].join('\n')
   }
 
   function handleAbort() {
     abortRef.current?.abort()
-    setStage('config')
+    // Don't reset to config — stay on running so user sees progress,
+    // then the loop will finish current job and land on done with partial results
   }
 
   function downloadCSV() {

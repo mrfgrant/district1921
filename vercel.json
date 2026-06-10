@@ -2,5 +2,9 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "functions": {
+    "src/app/api/admin/batch-scrape/route.ts": { "maxDuration": 60 },
+    "src/app/api/admin/scrape/route.ts": { "maxDuration": 60 }
+  }
 }

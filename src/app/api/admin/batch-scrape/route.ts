@@ -19,8 +19,7 @@ const CATEGORY_MAP: Record<string, string> = {
   'beauty store':'beauty-wellness','beauty market':'beauty-wellness','hair supply':'beauty-wellness',
   'african hair braiding':'beauty-wellness','hair braiding salon':'beauty-wellness',
   'natural hair':'beauty-wellness','lash studio':'beauty-wellness','eyelash salon':'beauty-wellness',
-  'nail care':'beauty-wellness','nail spa':'beauty-wellness','manicure':'beauty-wellness',
-  'pedicure':'beauty-wellness','cosmetics store':'beauty-wellness',
+  'nail care':'beauty-wellness','nail spa':'beauty-wellness','cosmetics store':'beauty-wellness',
   'doctor':'health-medical','medical clinic':'health-medical','dentist':'health-medical',
   'dental clinic':'health-medical','pharmacy':'health-medical',
   'mental health service':'health-medical','physical therapist':'health-medical',
@@ -83,57 +82,8 @@ function abbrevState(name: string | null | undefined): string | null {
   return null
 }
 
-async function scrapeOne(query: string, maxResults: number): Promise<any[]> {
-  const res = await fetch(
-    `https://api.apify.com/v2/acts/${encodeURIComponent(ACTOR_ID)}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&format=json&limit=${maxResults}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        searchStringsArray: [query],
-        maxCrawledPlacesPerSearch: maxResults,
-        includeOpeningHours: false,
-        maxReviews: 0, maxImages: 0,
-        exportPlaceUrls: false, includeHistogram: false,
-        includePeopleAlsosearch: false, language: 'en',
-      }),
-      signal: AbortSignal.timeout(120_000),
-    }
-  )
-  if (!res.ok) throw new Error(`Apify ${res.status}: ${(await res.text()).slice(0, 200)}`)
-  return res.json()
-}
-
-function toRow(p: any, queryCity: string, queryState: string) {
-  const stateAbbrev = abbrevState(p.state) ?? p.state ?? ''
-  const city        = p.city ?? queryCity
-  const state       = stateAbbrev || queryState
-  return {
-    name:     (p.title ?? '').trim(),
-    category: mapCategory(p.categories ?? []),
-    address:  p.street ?? '',
-    city,
-    state,
-    zip:      p.postalCode ?? '',
-    phone:    normalizePhone(p.phoneUnformatted ?? p.phone) ?? '',
-    website:  p.website ?? '',
-    lat:      p.location?.lat ?? '',
-    lng:      p.location?.lng ?? '',
-    source:   'google_maps',
-    geo_match: stateAbbrev === queryState ? 'yes' : 'no',
-  }
-}
-
-function toCSV(rows: ReturnType<typeof toRow>[]): string {
-  const headers = ['name','category','address','city','state','zip','phone','website','lat','lng','source','geo_match']
-  const escape  = (v: any) => `"${String(v ?? '').replace(/"/g, '""')}"`
-  const lines   = [headers.join(','), ...rows.map(r => headers.map(h => escape((r as any)[h])).join(','))]
-  return lines.join('\n')
-}
-
-// POST /api/admin/batch-scrape
-// Body: { jobs: { query: string, city: string, state: string }[], maxResults: number }
-// Streams NDJSON progress updates, ends with { done: true, csv: string }
+// Single job endpoint — one query per call, returns rows as JSON
+// Called repeatedly by the client to drive the batch loop
 export async function POST(req: NextRequest) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -143,50 +93,59 @@ export async function POST(req: NextRequest) {
 
   if (!APIFY_TOKEN) return NextResponse.json({ error: 'APIFY_API_TOKEN not configured' }, { status: 500 })
 
-  const { jobs, maxResults = 100 } = await req.json() as {
-    jobs: { query: string; city: string; state: string }[]
-    maxResults: number
+  const { query, city, state, maxResults = 100 } = await req.json() as {
+    query: string; city: string; state: string; maxResults?: number
   }
 
-  // Stream NDJSON progress
-  const encoder = new TextEncoder()
-  const stream  = new ReadableStream({
-    async start(controller) {
-      const send = (data: object) => controller.enqueue(encoder.encode(JSON.stringify(data) + '\n'))
+  if (!query?.trim()) return NextResponse.json({ error: 'Query required' }, { status: 400 })
 
-      const allRows: ReturnType<typeof toRow>[] = []
-      let completed = 0
-      let totalFound = 0
-
-      for (const job of jobs) {
-        send({ type: 'progress', completed, total: jobs.length, query: job.query, status: 'running' })
-        try {
-          const places = await scrapeOne(job.query, maxResults)
-          const rows   = places.filter(p => p.title && (p.city || job.city)).map(p => toRow(p, job.city, job.state))
-          allRows.push(...rows)
-          totalFound += rows.length
-          completed++
-          send({ type: 'progress', completed, total: jobs.length, query: job.query, status: 'done', found: rows.length, totalFound })
-        } catch (e: any) {
-          completed++
-          send({ type: 'progress', completed, total: jobs.length, query: job.query, status: 'error', error: e.message })
-        }
+  try {
+    const res = await fetch(
+      `https://api.apify.com/v2/acts/${encodeURIComponent(ACTOR_ID)}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&format=json&limit=${maxResults}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          searchStringsArray: [query],
+          maxCrawledPlacesPerSearch: maxResults,
+          includeOpeningHours: false,
+          maxReviews: 0, maxImages: 0,
+          exportPlaceUrls: false, includeHistogram: false,
+          includePeopleAlsosearch: false, language: 'en',
+        }),
+        signal: AbortSignal.timeout(55_000),
       }
+    )
 
-      // Deduplicate by phone number (keep first occurrence)
-      const seen  = new Set<string>()
-      const deduped = allRows.filter(r => {
-        const key = r.phone || `${r.name}|${r.city}|${r.state}`
-        if (seen.has(key)) return false
-        seen.add(key); return true
+    if (!res.ok) {
+      const text = await res.text()
+      return NextResponse.json({ error: `Apify ${res.status}: ${text.slice(0,200)}` }, { status: 500 })
+    }
+
+    const places: any[] = await res.json()
+
+    const rows = places
+      .filter(p => p.title && (p.city || city))
+      .map(p => {
+        const stateAbbrev = abbrevState(p.state) ?? (p.state?.length === 2 ? p.state.toUpperCase() : state)
+        return {
+          name:      (p.title ?? '').trim(),
+          category:  mapCategory(p.categories ?? []),
+          address:   p.street ?? '',
+          city:      p.city ?? city,
+          state:     stateAbbrev || state,
+          zip:       p.postalCode ?? '',
+          phone:     normalizePhone(p.phoneUnformatted ?? p.phone) ?? '',
+          website:   p.website ?? '',
+          lat:       p.location?.lat ?? '',
+          lng:       p.location?.lng ?? '',
+          source:    'google_maps',
+          geo_match: (stateAbbrev || state) === state ? 'yes' : 'no',
+        }
       })
 
-      send({ type: 'done', totalRaw: allRows.length, totalDeduped: deduped.length, csv: toCSV(deduped) })
-      controller.close()
-    }
-  })
-
-  return new NextResponse(stream, {
-    headers: { 'Content-Type': 'application/x-ndjson', 'Cache-Control': 'no-cache' }
-  })
+    return NextResponse.json({ rows, found: rows.length })
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message ?? 'Scrape failed' }, { status: 500 })
+  }
 }
