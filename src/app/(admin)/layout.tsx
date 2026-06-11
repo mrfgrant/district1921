@@ -18,9 +18,22 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="d1921-admin-layout min-h-screen bg-[var(--color-midnight)]">
       <AdminSidebar role={profile.role} />
-      <main className="flex-1 p-6 bg-[var(--color-midnight)]">{children}</main>
+      <main className="d1921-admin-main flex-1 p-4 md:p-6 bg-[var(--color-midnight)] min-w-0">
+        {children}
+      </main>
+      <style>{`
+        .d1921-admin-layout {
+          display: flex;
+          flex-direction: column;
+        }
+        @media (min-width: 769px) {
+          .d1921-admin-layout {
+            flex-direction: row;
+          }
+        }
+      `}</style>
     </div>
   )
 }

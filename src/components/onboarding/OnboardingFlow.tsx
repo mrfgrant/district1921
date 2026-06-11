@@ -177,7 +177,12 @@ export function OnboardingFlow({ userId, userEmail, isAdmin }: {
         .ob-hr-row:last-child{border-bottom:none}
         .ob-ti{padding:8px 10px;border:1.5px solid #d4cfc7;border-radius:6px;font-size:13px;color:#1c1c1c;background:#fff;outline:none;width:100%}
         .ob-ti:disabled{background:#f5f0e8;color:#b0a898;cursor:not-allowed}
-        .ob-hbtn{padding:8px 6px;border:1.5px solid #d4cfc7;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:all 0.15s;background:#fff;color:#6b7280;white-space:nowrap}
+.ob-hbtn{padding:8px 6px;border:1.5px solid #d4cfc7;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:all 0.15s;background:#fff;color:#6b7280;white-space:nowrap}
+        @media(max-width:640px){
+          .ob-svc-grid{grid-template-columns:1fr !important}
+          .ob-hr-row{grid-template-columns:80px 1fr 1fr !important;row-gap:4px}
+          .ob-cat-grid{grid-template-columns:1fr 1fr !important}
+        }
         .ob-hbtn.closed{background:#fdecea;border-color:#f5c6c6;color:#c62828}
         .ob-hbtn.open{background:#e8f5e9;border-color:#b8ddc0;color:#2e7d32}
         .ob-rrow{display:flex;justify-content:space-between;align-items:flex-start;padding:12px 0;border-bottom:1px solid #f0ebe0;gap:16px}

@@ -79,6 +79,18 @@ export function BusinessProfile({ business: biz, deals, events, isPaid }: {
 
   return (
     <div style={{ background: 'var(--surface)', minHeight: '100dvh', fontFamily: 'var(--font-body)' }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .bp-main-grid { grid-template-columns: 1fr !important; }
+          .bp-sidebar { display: none; }
+          .bp-cover { height: 220px !important; }
+          .bp-logo-wrap { bottom: -36px !important; left: 16px !important; }
+          .bp-logo { width: 72px !important; height: 72px !important; font-size: 28px !important; }
+          .bp-biz-header { padding: 52px 16px 24px !important; }
+          .bp-biz-name { font-size: 26px !important; }
+          .bp-hero-actions { flex-wrap: wrap; gap: 8px !important; }
+        }
+      `}</style>
 
       {/* Cover */}
       <div style={{ height: 300, background: biz.cover_photo_url ? `url(${biz.cover_photo_url}) center/cover` : `url('/hero-district.png') center/cover`, position: 'relative' }}>
@@ -162,7 +174,7 @@ export function BusinessProfile({ business: biz, deals, events, isPaid }: {
       </div>
 
       {/* Main */}
-      <div style={{ maxWidth: 960, margin: '0 auto', padding: '28px 24px', display: 'grid', gridTemplateColumns: '1fr 292px', gap: 24, alignItems: 'start' }}>
+      <div className="bp-main-grid" style={{ maxWidth: 960, margin: '0 auto', padding: '28px 24px', display: 'grid', gridTemplateColumns: '1fr 292px', gap: 24, alignItems: 'start' }}>
 
         {/* Left */}
         <div>
