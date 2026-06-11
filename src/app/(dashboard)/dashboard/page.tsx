@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { CompetitorInsight } from '@/components/dashboard/CompetitorInsight'
 
 export const metadata = { title: 'Dashboard' }
 
@@ -15,32 +16,74 @@ export default async function DashboardPage({
 
   const { data: business } = await supabase
     .from('businesses')
-    .select('id, name, status, subscription_status, gold_shield, profile_completion, city, state, category, slug')
+    .select(`
+      id, name, status, subscription_status, gold_shield, profile_completion,
+      city, state, category, slug,
+      description, phone, website, email, address, is_mobile_service,
+      logo_url, cover_photo_url, photos, hours, external_rating_url,
+      social_instagram, social_facebook, social_twitter,
+      social_linkedin, social_youtube, social_tiktok
+    `)
     .eq('owner_id', user.id)
     .single()
 
-  // No business yet — send to onboarding
   if (!business) redirect('/onboarding')
 
   const justSubmitted = searchParams.submitted === '1'
-  const justUpgraded = searchParams.success === 'subscription'
+  const justUpgraded  = searchParams.success === 'subscription'
+  const isPro         = business.subscription_status === 'active'
+  const score         = business.profile_completion ?? 0
+
+  // Build dynamic improvement prompts based on what is missing
+  const prompts: { icon: string; label: string; href: string }[] = []
+
+  if (!isPro)
+    prompts.push({ icon: '⭐', label: 'Upgrade to Pro (+10 features)', href: '/dashboard/billing' })
+  if (!business.description || business.description.length < 20)
+    prompts.push({ icon: '✏️', label: 'Write a description (+15 pts)', href: '/dashboard/profile' })
+  if (!business.logo_url)
+    prompts.push({ icon: '🖼', label: 'Upload your logo (+10 pts)', href: '/dashboard/profile' })
+  if (!business.phone)
+    prompts.push({ icon: '📞', label: 'Add your phone number (+10 pts)', href: '/dashboard/profile' })
+  if (!business.website)
+    prompts.push({ icon: '🌐', label: 'Add your website (+10 pts)', href: '/dashboard/profile' })
+  if (!business.cover_photo_url)
+    prompts.push({ icon: '📸', label: 'Upload a cover photo (+5 pts)', href: '/dashboard/profile' })
+  if (!business.photos || (business.photos as string[]).length === 0)
+    prompts.push({ icon: '🖼', label: 'Add gallery photos (+5 pts)', href: '/dashboard/profile' })
+  if (!business.email)
+    prompts.push({ icon: '✉️', label: 'Add your email (+5 pts)', href: '/dashboard/profile' })
+  if (!business.hours || Object.keys(business.hours ?? {}).length === 0)
+    prompts.push({ icon: '🕐', label: 'Set your hours (+5 pts)', href: '/dashboard/profile' })
+  if (!business.gold_shield)
+    prompts.push({ icon: '🛡', label: 'Apply for Gold Shield (+10 pts)', href: '/dashboard/shield' })
+  if (!business.social_instagram && !business.social_facebook && !business.social_twitter &&
+      !business.social_linkedin && !business.social_youtube && !business.social_tiktok)
+    prompts.push({ icon: '📱', label: 'Add a social link (+5 pts)', href: '/dashboard/profile' })
+  if (!business.external_rating_url)
+    prompts.push({ icon: '⭐', label: 'Link your Google/Yelp reviews (+5 pts)', href: '/dashboard/profile' })
+
+  // Show at most 4 prompts at a time
+  const visiblePrompts = prompts.slice(0, 4)
+
+  // Score color
+  const scoreColor = score >= 80 ? '#40916c' : score >= 50 ? '#c9a84c' : '#e74c3c'
+  const scoreLabel = score >= 80 ? 'Looking great!' : score >= 50 ? 'Good progress' : 'Just getting started'
 
   return (
     <div className="max-w-4xl">
-      {/* Just submitted banner */}
       {justSubmitted && (
         <div className="bg-[#d8f3dc] border border-[#b8e0c4] border-l-4 border-l-[#2d6a4f] rounded-xl px-6 py-4 mb-8">
-          <p className="font-semibold text-[#1a3a2a] mb-1">🎉 Your listing is under review</p>
+          <p className="font-semibold text-[#1a3a2a] mb-1">Your listing is under review</p>
           <p className="text-sm text-[#2d6a4f]">
-            We'll approve it within 24–48 hours and email you when it's live. In the meantime, you can complete your profile below.
+            We'll approve it within 24-48 hours and email you when it's live. In the meantime, complete your profile below.
           </p>
         </div>
       )}
 
-      {/* Upgraded banner */}
       {justUpgraded && (
         <div className="bg-[#f5e6c0] border border-[#e8d090] border-l-4 border-l-[#c9a84c] rounded-xl px-6 py-4 mb-8">
-          <p className="font-semibold text-[#3a2e10] mb-1">⭐ Welcome to Professional</p>
+          <p className="font-semibold text-[#3a2e10] mb-1">Welcome to Professional</p>
           <p className="text-sm text-[#5a4a20]">
             Your page is now unlocked. Upload your logo, add photos, and complete your profile to attract more customers.
           </p>
@@ -55,49 +98,65 @@ export default async function DashboardPage({
         </div>
         <div className="flex gap-3 flex-wrap">
           <StatusBadge status={business.status} />
-          {business.subscription_status === 'active' && (
+          {isPro && (
             <span className="px-3 py-1 bg-[#c9a84c] text-[#1a3a2a] text-xs font-bold rounded-full">PRO</span>
           )}
           {business.gold_shield && (
-            <span className="px-3 py-1 bg-[#1a3a2a] text-[#c9a84c] text-xs font-bold rounded-full">🛡 Gold Shield</span>
+            <span className="px-3 py-1 bg-[#1a3a2a] text-[#c9a84c] text-xs font-bold rounded-full">Gold Shield</span>
           )}
         </div>
       </div>
 
       {/* Profile completion */}
       <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-6 mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-semibold text-[var(--color-text)]">Profile Completion</span>
-          <span className="text-2xl font-bold text-[var(--color-gold)]">{business.profile_completion}%</span>
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <span className="text-sm font-semibold text-[var(--color-text)]">Profile Completion</span>
+            <span className="text-xs text-[var(--color-text-secondary)] ml-2">{scoreLabel}</span>
+          </div>
+          <span className="text-2xl font-bold" style={{ color: scoreColor }}>{score}%</span>
         </div>
-        <div className="h-2 bg-[var(--color-border)] rounded-full overflow-hidden mb-4">
+        <div className="h-2.5 bg-[var(--color-border)] rounded-full overflow-hidden mb-5">
           <div
-            className="h-full bg-[var(--color-gold)] rounded-full transition-all"
-            style={{ width: `${business.profile_completion}%` }}
+            className="h-full rounded-full transition-all duration-500"
+            style={{ width: `${score}%`, backgroundColor: scoreColor }}
           />
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {business.subscription_status !== 'active' && (
-            <Link href="/dashboard/billing" className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-gold)] transition-colors">
-              <span className="text-base">⬆️</span> Upgrade to Pro
-            </Link>
-          )}
-          <Link href="/dashboard/profile" className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-gold)] transition-colors">
-            <span className="text-base">📸</span> Add photos & logo
-          </Link>
-          <Link href="/dashboard/shield" className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-gold)] transition-colors">
-            <span className="text-base">🛡</span> Get Gold Shield
-          </Link>
-        </div>
+
+        {visiblePrompts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {visiblePrompts.map(p => (
+              <Link
+                key={p.label}
+                href={p.href}
+                className="flex items-center gap-2.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-gold)] transition-colors bg-[var(--color-bg)] rounded-lg px-3 py-2.5 border border-[var(--color-border)] hover:border-[var(--color-gold)]"
+              >
+                <span className="text-base shrink-0">{p.icon}</span>
+                <span>{p.label}</span>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-[#40916c] font-medium">Your profile is complete!</p>
+        )}
+
+        {prompts.length > 4 && (
+          <p className="text-xs text-[var(--color-text-secondary)] mt-3">
+            +{prompts.length - 4} more improvements available in your profile
+          </p>
+        )}
       </div>
+
+      {/* Competitor proximity */}
+      <CompetitorInsight />
 
       {/* Quick stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         {[
-          { label: 'Views', value: '—' },
+          { label: 'Views',     value: '—' },
           { label: 'Check-ins', value: '—' },
           { label: 'Followers', value: '—' },
-          { label: 'Shares', value: '—' },
+          { label: 'Shares',    value: '—' },
         ].map(stat => (
           <div key={stat.label} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 text-center">
             <div className="text-2xl font-bold text-[var(--color-gold)] mb-1">{stat.value}</div>
@@ -106,13 +165,13 @@ export default async function DashboardPage({
         ))}
       </div>
 
-      {/* Pending state message */}
+      {/* Pending state */}
       {business.status === 'pending' && (
         <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-6 text-center">
           <div className="text-3xl mb-3">⏳</div>
           <p className="font-semibold text-[var(--color-text)] mb-2">Your listing is being reviewed</p>
           <p className="text-sm text-[var(--color-text-secondary)]">
-            Our team will review your submission within 24–48 hours. You'll receive an email when it goes live.
+            Our team will review your submission within 24-48 hours. You'll receive an email when it goes live.
           </p>
         </div>
       )}
