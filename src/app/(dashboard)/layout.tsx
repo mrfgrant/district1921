@@ -7,9 +7,22 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
   return (
-    <div className="flex min-h-screen">
+    <div className="d1921-dash-layout min-h-screen bg-[var(--color-midnight)]">
       <DashboardSidebar />
-      <main className="flex-1 p-6 bg-[var(--color-midnight)]">{children}</main>
+      <main className="d1921-dash-main flex-1 p-4 md:p-6 bg-[var(--color-midnight)] min-w-0">
+        {children}
+      </main>
+      <style>{`
+        .d1921-dash-layout {
+          display: flex;
+          flex-direction: column;
+        }
+        @media (min-width: 769px) {
+          .d1921-dash-layout {
+            flex-direction: row;
+          }
+        }
+      `}</style>
     </div>
   )
 }

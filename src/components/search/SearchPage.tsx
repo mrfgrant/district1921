@@ -378,8 +378,18 @@ export function SearchPage() {
 
   return (
     <div style={{ minHeight: '100dvh', background: 'var(--surface)', fontFamily: 'var(--font-body)' }}>
+      <style>{`
+        @media (max-width: 640px) {
+          .d1921-search-bar { flex-direction: column !important; }
+          .d1921-search-bar > div { border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.1) !important; width: 100% !important; flex: none !important; min-width: 0 !important; }
+          .d1921-search-bar select { border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.1) !important; padding: 13px 14px !important; width: 100% !important; }
+          .d1921-search-bar button { padding: 14px 20px !important; width: 100% !important; justify-content: center !important; }
+          .d1921-search-hero { padding: 20px 16px !important; }
+          .d1921-results-wrap { padding: 16px 16px 48px !important; }
+        }
+      `}</style>
 
-      <div style={{ background: 'var(--forest-mid)', borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '36px 24px' }}>
+      <div className="d1921-search-hero" style={{ background: 'var(--forest-mid)', borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '36px 24px' }}>
         <div style={{ maxWidth: 920, margin: '0 auto' }}>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
@@ -399,7 +409,7 @@ export function SearchPage() {
           )}
 
           <form onSubmit={handleSearch} role="search">
-            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.06)', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.14)', marginBottom: 14 }}>
+            <div className="d1921-search-bar" style={{ display: 'flex', background: 'rgba(255,255,255,0.06)', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.14)', marginBottom: 14 }}>
               <div style={{ flex: 2, display: 'flex', alignItems: 'center', padding: '0 14px', gap: 8, borderRight: '1px solid rgba(255,255,255,0.1)' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: 'rgba(255,255,255,0.4)', flexShrink: 0 }} aria-hidden="true">
                   <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -451,7 +461,7 @@ export function SearchPage() {
         </div>
       </div>
 
-      <div style={{ maxWidth: 920, margin: '0 auto', padding: '24px 24px 48px' }}>
+      <div className="d1921-results-wrap" style={{ maxWidth: 920, margin: '0 auto', padding: '24px 24px 48px' }}>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18, flexWrap: 'wrap' }}>
           {searched && (
