@@ -1,55 +1,80 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-const APIFY_TOKEN = process.env.APIFY_API_TOKEN ?? ''
-const ACTOR_ID    = 'compass/crawler-google-places'
+const OUTSCRAPER_KEY = process.env.OUTSCRAPER_API_KEY ?? ''
 
 const CATEGORY_MAP: Record<string, string> = {
-  'soul food restaurant':'food-dining','restaurant':'food-dining','american restaurant':'food-dining',
-  'southern restaurant':'food-dining','caribbean restaurant':'food-dining','african restaurant':'food-dining',
-  'breakfast restaurant':'food-dining','seafood restaurant':'food-dining','bbq restaurant':'food-dining',
-  'chicken restaurant':'food-dining','jamaican restaurant':'food-dining','bakery':'food-dining',
-  'cafe':'food-dining','coffee shop':'food-dining','caterer':'food-dining','bar & grill':'food-dining',
-  'bar':'food-dining','food':'food-dining','diner':'food-dining',
-  'hair salon':'beauty-wellness','nail salon':'beauty-wellness','beauty salon':'beauty-wellness',
-  'barber shop':'beauty-wellness','barbershop':'beauty-wellness','spa':'beauty-wellness',
+  'soul food restaurant':'food-dining','soul food':'food-dining','restaurant':'food-dining',
+  'american restaurant':'food-dining','southern restaurant':'food-dining',
+  'caribbean restaurant':'food-dining','african restaurant':'food-dining',
+  'breakfast restaurant':'food-dining','brunch restaurant':'food-dining',
+  'seafood restaurant':'food-dining','bbq restaurant':'food-dining',
+  'chicken restaurant':'food-dining','pizza restaurant':'food-dining',
+  'jamaican restaurant':'food-dining','bakery':'food-dining','cafe':'food-dining',
+  'coffee shop':'food-dining','caterer':'food-dining','food':'food-dining',
+  'bar & grill':'food-dining','bar':'food-dining',
+  'hair salon':'beauty-wellness','nail salon':'beauty-wellness',
+  'beauty salon':'beauty-wellness','barber shop':'beauty-wellness',
+  'barbershop':'beauty-wellness','spa':'beauty-wellness',
   'massage therapist':'beauty-wellness','hair care':'beauty-wellness',
   'beauty supply store':'beauty-wellness','waxing hair removal':'beauty-wellness',
-  'hair store':'beauty-wellness','hair extensions':'beauty-wellness','virgin hair':'beauty-wellness',
-  'beauty store':'beauty-wellness','beauty market':'beauty-wellness','hair supply':'beauty-wellness',
+  'tanning salon':'beauty-wellness','tattoo shop':'beauty-wellness',
   'african hair braiding':'beauty-wellness','hair braiding salon':'beauty-wellness',
-  'natural hair':'beauty-wellness','lash studio':'beauty-wellness','eyelash salon':'beauty-wellness',
-  'nail care':'beauty-wellness','nail spa':'beauty-wellness','cosmetics store':'beauty-wellness',
-  'doctor':'health-medical','medical clinic':'health-medical','dentist':'health-medical',
-  'dental clinic':'health-medical','pharmacy':'health-medical',
-  'mental health service':'health-medical','physical therapist':'health-medical',
-  'chiropractor':'health-medical','pediatric dentist':'health-medical',
-  'lawyer':'legal-financial','law firm':'legal-financial','legal services':'legal-financial',
-  'accountant':'legal-financial','tax preparation service':'legal-financial',
-  'insurance agency':'legal-financial','financial planner':'legal-financial',
-  'credit union':'legal-financial','bank':'legal-financial','mortgage broker':'legal-financial',
-  'certified public accountant':'legal-financial','financial advisor':'legal-financial',
+  'natural hair':'beauty-wellness','lash studio':'beauty-wellness',
+  'doctor':'health-medical','medical clinic':'health-medical',
+  'dentist':'health-medical','dental clinic':'health-medical',
+  'pharmacy':'health-medical','mental health service':'health-medical',
+  'physical therapist':'health-medical','chiropractor':'health-medical',
+  'hospital':'health-medical','urgent care center':'health-medical',
+  'lawyer':'legal-financial','law firm':'legal-financial',
+  'legal services':'legal-financial','accountant':'legal-financial',
+  'tax preparation service':'legal-financial','insurance agency':'legal-financial',
+  'financial planner':'legal-financial','credit union':'legal-financial',
+  'bank':'legal-financial','mortgage broker':'legal-financial',
+  'notary public':'legal-financial',
   'general contractor':'home-construction','roofing contractor':'home-construction',
-  'plumber':'home-construction','electrician':'home-construction','hvac contractor':'home-construction',
-  'landscaper':'home-construction','house painter':'home-construction',
-  'flooring store':'home-construction','moving company':'home-construction',
-  'cleaning service':'home-construction','handyman':'home-construction',
-  'remodeling contractor':'home-construction','construction company':'home-construction',
-  'auto repair shop':'automotive','car dealer':'automotive','auto parts store':'automotive',
-  'car wash':'automotive','tire shop':'automotive','towing service':'automotive',
-  'auto detailing service':'automotive','mechanic':'automotive',
-  'child care agency':'education-childcare','day care center':'education-childcare',
-  'preschool':'education-childcare','after school program':'education-childcare',
-  'child care':'education-childcare','kindergarten':'education-childcare',
+  'plumber':'home-construction','electrician':'home-construction',
+  'hvac contractor':'home-construction','landscaper':'home-construction',
+  'house painter':'home-construction','flooring store':'home-construction',
+  'moving company':'home-construction','cleaning service':'home-construction',
+  'handyman':'home-construction','remodeling contractor':'home-construction',
+  'auto repair shop':'automotive','car dealer':'automotive',
+  'auto parts store':'automotive','car wash':'automotive',
+  'tire shop':'automotive','towing service':'automotive',
+  'auto detailing service':'automotive',
+  'marketing agency':'professional-services','photographer':'professional-services',
+  'videographer':'professional-services','graphic designer':'professional-services',
+  'printing service':'professional-services','staffing agency':'professional-services',
+  'event planner':'professional-services','security service':'professional-services',
+  'consultant':'professional-services','business management consultant':'professional-services',
+  'school':'education-childcare','tutoring service':'education-childcare',
+  'child care agency':'education-childcare','preschool':'education-childcare',
+  'day care center':'education-childcare','after school program':'education-childcare',
+  'clothing store':'retail-products','boutique':'retail-products',
+  'book store':'retail-products','gift shop':'retail-products',
+  'grocery store':'retail-products','florist':'retail-products',
+  'jewelry store':'retail-products','shoe store':'retail-products',
+  'church':'faith-community','religious organization':'faith-community',
+  'non-profit organization':'nonprofit','community center':'nonprofit',
+  'charity':'nonprofit','foundation':'nonprofit',
+  'real estate agency':'real-estate','real estate agent':'real-estate',
+  'property management company':'real-estate',
+  'gym':'entertainment-travel','fitness center':'entertainment-travel',
+  'yoga studio':'entertainment-travel','dance school':'entertainment-travel',
+  'art gallery':'entertainment-travel','music venue':'entertainment-travel',
+  'hotel':'entertainment-travel','travel agency':'entertainment-travel',
+  'night club':'entertainment-travel','lounge':'entertainment-travel',
+  'software company':'programming-services','web designer':'internet-services',
+  'it service':'information-technology','computer repair service':'information-technology',
+  'veteran services organization':'veteran-services',
 }
 
-function mapCategory(categories: string[]): string {
-  for (const cat of categories) {
-    const lower = cat.toLowerCase().trim()
-    if (CATEGORY_MAP[lower]) return CATEGORY_MAP[lower]
-    for (const [key, val] of Object.entries(CATEGORY_MAP)) {
-      if (lower.includes(key) || key.includes(lower)) return val
-    }
+function mapCategory(categoryStr: string | null | undefined): string {
+  if (!categoryStr) return 'professional-services'
+  const lower = categoryStr.toLowerCase().trim()
+  if (CATEGORY_MAP[lower]) return CATEGORY_MAP[lower]
+  for (const [key, val] of Object.entries(CATEGORY_MAP)) {
+    if (lower.includes(key) || key.includes(lower)) return val
   }
   return 'professional-services'
 }
@@ -82,6 +107,9 @@ function abbrevState(name: string | null | undefined): string | null {
   return null
 }
 
+const NOT_STATES    = new Set(['IN','OR','ME','OK','AS','IS','IT','AT','BE','DO','GO','HI','IF','MY','NO','OF','OH','ON','SO','TO','UP','US','WE'])
+const STATE_ABBREVS = new Set(['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC'])
+
 // Single job endpoint — one query per call, returns rows as JSON
 // Called repeatedly by the client to drive the batch loop
 export async function POST(req: NextRequest) {
@@ -91,7 +119,7 @@ export async function POST(req: NextRequest) {
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   if (profile?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  if (!APIFY_TOKEN) return NextResponse.json({ error: 'APIFY_API_TOKEN not configured' }, { status: 500 })
+  if (!OUTSCRAPER_KEY) return NextResponse.json({ error: 'OUTSCRAPER_API_KEY not configured' }, { status: 500 })
 
   const { query, city, state, maxResults = 100 } = await req.json() as {
     query: string; city: string; state: string; maxResults?: number
@@ -99,46 +127,46 @@ export async function POST(req: NextRequest) {
 
   if (!query?.trim()) return NextResponse.json({ error: 'Query required' }, { status: 400 })
 
+  const params = new URLSearchParams({
+    query,
+    limit: String(maxResults),
+    async: 'false',
+    language: 'en',
+  })
+
   try {
     const res = await fetch(
-      `https://api.apify.com/v2/acts/${encodeURIComponent(ACTOR_ID)}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&format=json&limit=${maxResults}`,
+      `https://api.app.outscraper.com/maps/search-v3?${params.toString()}`,
       {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          searchStringsArray: [query],
-          maxCrawledPlacesPerSearch: maxResults,
-          includeOpeningHours: false,
-          maxReviews: 0, maxImages: 0,
-          exportPlaceUrls: false, includeHistogram: false,
-          includePeopleAlsosearch: false, language: 'en',
-        }),
+        method: 'GET',
+        headers: { 'X-API-KEY': OUTSCRAPER_KEY },
         signal: AbortSignal.timeout(55_000),
       }
     )
 
     if (!res.ok) {
       const text = await res.text()
-      return NextResponse.json({ error: `Apify ${res.status}: ${text.slice(0,200)}` }, { status: 500 })
+      return NextResponse.json({ error: `Outscraper ${res.status}: ${text.slice(0,200)}` }, { status: 500 })
     }
 
-    const places: any[] = await res.json()
+    const json = await res.json()
+    const places: any[] = (json.data ?? []).flat()
 
     const rows = places
-      .filter(p => p.title && (p.city || city))
+      .filter(p => p.name && (p.city || city))
       .map(p => {
         const stateAbbrev = abbrevState(p.state) ?? (p.state?.length === 2 ? p.state.toUpperCase() : state)
         return {
-          name:      (p.title ?? '').trim(),
-          category:  mapCategory(p.categories ?? []),
-          address:   p.street ?? '',
+          name:      (p.name ?? '').trim(),
+          category:  mapCategory(p.type),
+          address:   p.full_address ?? p.street ?? '',
           city:      p.city ?? city,
           state:     stateAbbrev || state,
-          zip:       p.postalCode ?? '',
-          phone:     normalizePhone(p.phoneUnformatted ?? p.phone) ?? '',
-          website:   p.website ?? '',
-          lat:       p.location?.lat ?? '',
-          lng:       p.location?.lng ?? '',
+          zip:       p.postal_code ?? p.zip ?? '',
+          phone:     normalizePhone(p.phone) ?? '',
+          website:   p.site ?? p.website ?? '',
+          lat:       p.latitude ?? '',
+          lng:       p.longitude ?? '',
           source:    'google_maps',
           geo_match: (stateAbbrev || state) === state ? 'yes' : 'no',
         }
