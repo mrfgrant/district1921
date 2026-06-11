@@ -80,13 +80,14 @@ export function BusinessProfile({ business: biz, deals, events, isPaid }: {
   return (
     <div style={{ background: 'var(--surface)', minHeight: '100dvh', fontFamily: 'var(--font-body)' }}>
       <style>{`
+        .bp-logo { width: 92px; height: 92px; font-size: 34px; margin-top: -46px; flex-shrink: 0; }
         @media (max-width: 768px) {
           .bp-main-grid { grid-template-columns: 1fr !important; }
           .bp-sidebar { display: none; }
           .bp-cover { height: 220px !important; }
-          .bp-logo { width: 64px !important; height: 64px !important; font-size: 24px !important; margin-top: -32px !important; flex-shrink: 0 !important; }
-          .bp-biz-header { padding: 0 16px 20px !important; gap: 14px !important; }
-          .bp-biz-name { font-size: 22px !important; }
+          .bp-logo { width: 64px; height: 64px; font-size: 24px; margin-top: -28px; }
+          .bp-biz-header { padding: 0 16px 20px; gap: 14px; }
+          .bp-biz-name { font-size: 22px; }
           .bp-hero-actions { flex-wrap: wrap; gap: 8px !important; }
         }
       `}</style>
@@ -102,7 +103,7 @@ export function BusinessProfile({ business: biz, deals, events, isPaid }: {
       {/* Profile header */}
       <div style={{ background: 'var(--forest-mid)', padding: '0 24px 24px', borderBottom: '1px solid var(--rule-mid)' }}>
         <div className="bp-biz-header" style={{ maxWidth: 960, margin: '0 auto', display: 'flex', alignItems: 'flex-end', gap: 20 }}>
-          <div className="bp-logo" style={{ width: 92, height: 92, borderRadius: 'var(--radius-lg)', background: biz.logo_url ? `url(${biz.logo_url}) center/cover` : 'var(--surface-card)', border: '3px solid rgba(255,255,255,0.15)', flexShrink: 0, marginTop: -46, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: 34, fontWeight: 700, color: 'var(--sage-light)', boxShadow: '0 4px 16px rgba(0,0,0,0.25)' }}>
+          <div className="bp-logo" style={{ borderRadius: 'var(--radius-lg)', background: biz.logo_url ? `url(${biz.logo_url}) center/cover` : 'var(--surface-card)', border: '3px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', color: 'var(--sage-light)', boxShadow: '0 4px 16px rgba(0,0,0,0.25)' }}>
             {!biz.logo_url && biz.name[0]}
           </div>
           <div style={{ flex: 1, paddingBottom: 4 }}>
