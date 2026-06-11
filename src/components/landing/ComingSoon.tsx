@@ -77,6 +77,32 @@ export function ComingSoon() {
 
         @keyframes csfu { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         .cs-animate { opacity: 0; animation: csfu 0.7s var(--ease-out) forwards; }
+        /* ── Mobile ─────────────────────────────────────── */
+        @media (max-width: 640px) {
+          .cs-section-pad { padding: 40px 20px !important; }
+          .cs-hero-text { padding: 0 20px 40px !important; }
+          .cs-grid-2col { grid-template-columns: 1fr !important; gap: 28px !important; }
+          .cs-grid-3col { grid-template-columns: 1fr !important; }
+          .cs-grid-4col { grid-template-columns: 1fr 1fr !important; }
+          .cs-grid-mission { grid-template-columns: 1fr !important; gap: 28px !important; }
+          .cs-feat:nth-child(3n) { border-right: 1px solid var(--rule) !important; }
+          .cs-feat:nth-last-child(-n+3) { border-bottom: 1px solid var(--rule) !important; }
+          .cs-feat:nth-child(odd) { border-right: none !important; }
+          .cs-feat:last-child { border-bottom: none !important; border-right: 1px solid var(--rule) !important; }
+          .cs-pillar { border-right: none !important; border-bottom: 1px solid var(--rule) !important; }
+          .cs-pillar:last-child { border-bottom: none !important; }
+          .cs-cta-bar { flex-direction: column !important; padding: 32px 20px !important; text-align: center !important; }
+          .cs-pricing-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+          .cs-pricing-free { border-radius: var(--radius-lg) !important; }
+          .cs-pricing-pro { border-radius: var(--radius-lg) !important; }
+          .cs-footer { padding: 20px !important; flex-direction: column !important; text-align: center !important; }
+          .cs-tabs { flex-direction: column !important; }
+          .cs-tab { border-right: none !important; border-bottom: 1px solid var(--rule) !important; padding: 12px 16px !important; text-align: left !important; }
+          .cs-tab:last-child { border-bottom: none !important; }
+          .cs-hero-buttons { flex-direction: column !important; }
+          .cs-hero-buttons a { text-align: center !important; }
+        }
+
       `}</style>
 
       {/* Header */}
@@ -94,7 +120,7 @@ export function ComingSoon() {
       <div style={{ position: 'relative', height: 560, overflow: 'hidden' }}>
         <Image src="/hero-district.png" alt="District 1921" fill priority style={{ objectFit: 'cover', objectPosition: 'center 30%' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(10,25,18,0.2) 0%, rgba(10,25,18,0.15) 40%, rgba(10,25,18,0.75) 75%, rgba(10,25,18,0.95) 100%)' }} />
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 48px 52px', maxWidth: 960 }} className="cs-animate">
+        <div className="cs-hero-text" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 48px 52px', maxWidth: 960 }} className="cs-animate">
           <p style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 16, opacity: 0.9 }}>District 1921 · All 50 States</p>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(36px, 6vw, 62px)', fontWeight: 700, color: '#fff', lineHeight: 1.06, letterSpacing: '-0.02em', marginBottom: 16 }}>
             The community<br />business directory<br />
@@ -103,7 +129,7 @@ export function ComingSoon() {
           <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.75)', maxWidth: 520, lineHeight: 1.65, marginBottom: 28 }}>
             A nationwide directory where community members discover, share, and support businesses — and owners build a real presence. <strong style={{ color: 'var(--gold-warm)' }}>Free to search. Free to list.</strong>
           </p>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <div className="cs-hero-buttons" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <a href="/search" style={{ display: 'inline-block', background: 'var(--gold)', color: 'var(--forest)', padding: '13px 26px', fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 700, textDecoration: 'none', borderRadius: 'var(--radius-md)', letterSpacing: '0.02em' }}>
               Search the Directory →
             </a>
@@ -115,10 +141,10 @@ export function ComingSoon() {
       </div>
 
       {/* Mission */}
-      <div style={{ padding: '64px 48px', borderBottom: '1px solid var(--rule)' }} className="cs-animate">
+      <div className="cs-section-pad" style={{ padding: '64px 48px', borderBottom: '1px solid var(--rule)' }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
           <p className="cs-label">Our Mission</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 56, alignItems: 'start' }}>
+          <div className="cs-grid-mission" style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 56, alignItems: 'start' }}>
             <div>
               <p style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(20px, 2.5vw, 26px)', fontWeight: 700, lineHeight: 1.5, color: 'var(--ink)', marginBottom: 20 }}>
                 On May 31, 1921, <em style={{ fontStyle: 'italic', color: 'var(--sage)' }}>Black Wall Street</em> was burned to the ground. We carry that name forward — not as a monument, but as a foundation.
@@ -144,10 +170,10 @@ export function ComingSoon() {
       </div>
 
       {/* Pillars */}
-      <div style={{ padding: '64px 48px', borderBottom: '1px solid var(--rule)' }} className="cs-animate">
+      <div className="cs-section-pad" style={{ padding: '64px 48px', borderBottom: '1px solid var(--rule)' }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
           <p className="cs-label">What We're Building</p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', border: '1px solid var(--rule)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
+          <div className="cs-grid-4col" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', border: '1px solid var(--rule)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
             {[
               { n:'01', t:'Discovery', d:'Search and find community businesses across every city in all 50 states. Map-first, mobile-first, community-driven.' },
               { n:'02', t:'Trust', d:'The Gold Shield — earned through real verification. SOS lookup, phone check, web reachability, and a proof photo.' },
@@ -165,10 +191,10 @@ export function ComingSoon() {
       </div>
 
       {/* Features */}
-      <div style={{ padding: '64px 48px', borderBottom: '1px solid var(--rule)' }} className="cs-animate">
+      <div className="cs-section-pad" style={{ padding: '64px 48px', borderBottom: '1px solid var(--rule)' }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
           <p className="cs-label">Platform Features</p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', border: '1px solid var(--rule)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
+          <div className="cs-grid-3col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', border: '1px solid var(--rule)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
             {[
               { tag:'Deals', t:'Community Deals', d:'Owners post exclusive offers. Followers get notified first. Browse deals across every category and city.' },
               { tag:'Events', t:'Local Events', d:'Grand openings, pop-ups, gatherings. Discover what\'s happening near you, searchable by city.' },
@@ -188,7 +214,7 @@ export function ComingSoon() {
       </div>
 
       {/* CTA bar */}
-      <div style={{ background: 'var(--forest)', padding: '40px 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
+      <div className="cs-cta-bar" style={{ background: 'var(--forest)', padding: '40px 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
         <div>
           <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, color: '#fff', marginBottom: 6, letterSpacing: '-0.01em' }}>Ready to find your community?</h3>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', maxWidth: 460, lineHeight: 1.6 }}>The directory is live and growing. Search businesses near you or add one today.</p>
@@ -199,8 +225,8 @@ export function ComingSoon() {
       </div>
 
       {/* Registration */}
-      <div style={{ padding: '64px 48px', background: 'var(--surface-card)' }} id="register">
-        <div style={{ maxWidth: 960, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'start' }}>
+      <div className="cs-section-pad" id="register" style={{ padding: '64px 48px', background: 'var(--surface-card)' }}>
+        <div className="cs-grid-2col" style={{ maxWidth: 960, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'start' }}>
           <div>
             <p className="cs-label">Get Involved</p>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 700, lineHeight: 1.1, color: 'var(--ink)', marginBottom: 14, letterSpacing: '-0.02em' }}>
@@ -219,7 +245,7 @@ export function ComingSoon() {
               </div>
             ) : (
               <form onSubmit={handleSubmit}>
-                <div style={{ display: 'flex', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', overflow: 'hidden', marginBottom: 16 }}>
+                <div className="cs-tabs" style={{ display: 'flex', border: '1px solid var(--rule)', borderRadius: 'var(--radius)', overflow: 'hidden', marginBottom: 16 }}>
                   {(['community','owner','suggest'] as Mode[]).map(m => (
                     <button key={m} type="button" className={`cs-tab ${mode === m ? 'active' : ''}`} onClick={() => setMode(m)}>
                       {m === 'community' ? 'Community' : m === 'owner' ? 'Business Owner' : 'Suggest a Business'}
@@ -260,11 +286,11 @@ export function ComingSoon() {
       </div>
 
       {/* Pricing */}
-      <div style={{ padding: '64px 48px', borderTop: '1px solid var(--rule)' }} id="pricing">
+      <div className="cs-section-pad" id="pricing" style={{ padding: '64px 48px', borderTop: '1px solid var(--rule)' }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
           <p className="cs-label">How It Works</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-            <div style={{ padding: 36, border: '1px solid var(--rule)', borderRadius: 'var(--radius-lg) 0 0 var(--radius-lg)', background: 'var(--surface-card)' }}>
+          <div className="cs-pricing-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+            <div style={{ padding: 36, border: '1px solid var(--rule)', borderRadius: 'var(--radius-lg) 0 0 var(--radius-lg)', background: 'var(--surface-card)' }} className="cs-pricing-free">
               <p style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--sage)', marginBottom: 10 }}>Free Listing</p>
               <p style={{ fontFamily: 'var(--font-display)', fontSize: 48, fontWeight: 700, color: 'var(--ink)', lineHeight: 1, marginBottom: 4 }}>$0</p>
               <p style={{ fontSize: 13, color: 'var(--ink-muted)', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid var(--rule)' }}>Forever free — no credit card</p>
@@ -273,7 +299,7 @@ export function ComingSoon() {
               ))}
               <p style={{ marginTop: 24, paddingTop: 24, borderTop: '1px solid var(--rule)', fontSize: 12, color: 'var(--ink-muted)', lineHeight: 1.6 }}>The directory grows through the community. Anyone can add a listing — owners and members alike.</p>
             </div>
-            <div style={{ padding: 36, border: '1px solid var(--forest)', borderRadius: '0 var(--radius-lg) var(--radius-lg) 0', background: 'var(--forest)', color: '#fff' }}>
+            <div style={{ padding: 36, border: '1px solid var(--forest)', borderRadius: '0 var(--radius-lg) var(--radius-lg) 0', background: 'var(--forest)', color: '#fff' }} className="cs-pricing-pro">
               <p style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 10 }}>Professional Page</p>
               <p style={{ fontFamily: 'var(--font-display)', fontSize: 48, fontWeight: 700, color: '#fff', lineHeight: 1, marginBottom: 4 }}>$15<span style={{ fontSize: 18, fontWeight: 400 }}>/mo</span></p>
               <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>$90 billed every 6 months · auto-renews</p>
@@ -289,7 +315,7 @@ export function ComingSoon() {
       </div>
 
       {/* Footer */}
-      <footer style={{ background: 'var(--forest)', padding: '24px 48px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+      <footer className="cs-footer" style={{ background: 'var(--forest)', padding: '24px 48px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
         <span style={{ fontFamily: 'var(--font-display)', fontSize: 17, fontWeight: 700, color: '#fff' }}>
           District <span style={{ color: 'var(--gold)' }}>1921</span>
         </span>
